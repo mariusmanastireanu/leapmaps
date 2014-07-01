@@ -27,10 +27,10 @@
 * [TODO] Code review
 
 * All the code related to the **Leap Motion Controller** events (such as frame, gesture, hands, fingers and other related events) should be placed in the correct controller. 
-Leap Motion controller can be found here: **"js/leapmotioncontroller.js"**
+Leap Motion controller can be found here: *"js/leapmotioncontroller.js"*
 
-* **Google Maps** or **Street View** events (such as changing the position of the map, or interacting with google maps api) should be placed in the correct controller.
-Google Maps controller can be found here: **"js/googlemapscontroller.js"**
+* **Google Maps and Street View** events (such as changing the position of the map, or interacting with google maps api) should be placed in the correct controller.
+Google Maps controller can be found here: *"js/googlemapscontroller.js"*
 
 ### Who do I talk to? ###
 
