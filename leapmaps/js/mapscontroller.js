@@ -3,6 +3,9 @@ var lat = 46.7667;
 var lng = 23.5833;
 var zoom = 8;
 
+var latLngStep = 0.1;
+var zoomStep = 1;
+
 function initialize() {
 	// map options
 	var mapOptions = {
@@ -43,6 +46,23 @@ function moveMap(direction) {
 	}
 
 	map.panTo(new google.maps.LatLng(lat, lng)); 
+}
+
+/**
+* Zooms the map based on the direction specified
+* @direction - true if zoom in, false means zoom out
+**/
+function zoomMap(direction) {
+
+	getLatLngAndZoom();
+
+	if (direction) 
+		zoom += zoomStep;
+	else 
+		zoom -= zoomStep;
+
+	map.setZoom(zoom);
+
 }
 
 /**

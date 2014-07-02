@@ -1,8 +1,6 @@
 var pitchStep = 2;
 var headingStep = 2;
 
-var latLngStep = 0.1;
-
 $(document).on("keypress", function (e) {
 	// TODO - remove this			
 	console.log(e.which);
