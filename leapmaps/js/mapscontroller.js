@@ -1,7 +1,7 @@
 var map;
 var lat = 46.7667;
 var lng = 23.5833;
-var zoom = 8;
+var zoom = 10;
 
 var latLngStep = 0.1;
 var zoomStep = 1;
@@ -11,6 +11,8 @@ function initialize() {
 	var mapOptions = {
 	  center: new google.maps.LatLng(lat, lng),
 	  zoom: zoom,
+	  maxZoom: 18,
+	  minZoom: 3,
 	  panControl: false,
 	  zoomControl: false
 	};
@@ -29,6 +31,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
 function moveMap(direction) {
 
  	getLatLngAndZoom();
+ 	latLngStep = 1/zoom;
 
 	switch (direction) {
 		case "N":
@@ -62,7 +65,6 @@ function zoomMap(direction) {
 		zoom -= zoomStep;
 
 	map.setZoom(zoom);
-
 }
 
 /**
