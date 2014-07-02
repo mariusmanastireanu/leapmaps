@@ -43,25 +43,31 @@ var controller = Leap.loop(leapOptions, function(frame){
 function handleCircle(frame, gesture) {
   var clockwise = false;
   var pointableID = gesture.pointableIds[0];
-  var direction = frame.pointable(pointableID).direction;;
-  var dotProduct = Leap.vec3.dot(direction, gesture.normal);
+  var direction = frame.pointable(pointableID).direction;
 
-  if (dotProduct  >  0) 
-    clockwise = true;
+  // This check solves a small bug
+  // When making a circle with an pointable object (such as a pen)
+  // Sometimes the direction is 'undefined'
+  if (direction) {
+    var dotProduct = Leap.vec3.dot(direction, gesture.normal);
 
-  if (clockwise) {
-    numberOfZoomIn++;
+    if (dotProduct  >  0) 
+      clockwise = true;
 
-    if (numberOfZoomIn == 10) {
-      numberOfZoomIn = 0 ;
+    if (clockwise) {
+      numberOfZoomIn++;
+
+      if (numberOfZoomIn == 10) {
+        numberOfZoomIn = 0 ;
+        zoomMap(clockwise);
+      }
+    } else {
+      numberOfZoomOut++;
+
+      if (numberOfZoomOut == 10) {
+        numberOfZoomOut = 0;
       zoomMap(clockwise);
-    }
-  } else {
-    numberOfZoomOut++;
-
-    if (numberOfZoomOut == 10) {
-      numberOfZoomOut = 0;
-    zoomMap(clockwise);
+      }
     }
   }
 }
