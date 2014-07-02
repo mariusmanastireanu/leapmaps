@@ -7,6 +7,8 @@ var hand, finger;
 var numberOfZoomIn = 0;
 var numberOfZoomOut = 0;
 
+var switchMode = 0;
+
 
 // Leap.loop uses browser's requestAnimationFrame
 var leapOptions = { 
@@ -23,7 +25,7 @@ var controller = Leap.loop(leapOptions, function(frame){
               handleCircle(frame, gesture);
               break;
           case "keyTap":
-              console.log("Key Tap Gesture");
+              handleKeyTap(frame, gesture);
               break;
           case "screenTap":
               console.log("Screen Tap Gesture");
@@ -41,6 +43,8 @@ var controller = Leap.loop(leapOptions, function(frame){
 * Based on its direction it should zoom in or zoom out the map
 **/
 function handleCircle(frame, gesture) {
+  switchMode = 0;
+
   var clockwise = false;
   var pointableID = gesture.pointableIds[0];
   var direction = frame.pointable(pointableID).direction;
@@ -72,11 +76,27 @@ function handleCircle(frame, gesture) {
   }
 }
 
+function handleKeyTap(frame, gesture) {
+  var handIds = gesture.handIds;
+  handIds.forEach(function(handId) {
+    var hand = frame.hand(handId);
+    
+      switchMode++;
+  
+      if (switchMode == 3) {
+        switchMapMode();
+        switchMode = 0;
+      }
+  });
+}
+
 /**
 * Handles the swipe gesture.
 * Based on its type it should move the map
 **/
 function handleSwipe(gesture) {
+  switchMode = 0;
+
   //Classify swipe as either horizontal or vertical
   var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
 
