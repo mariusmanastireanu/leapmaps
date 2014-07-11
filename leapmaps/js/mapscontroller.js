@@ -14,6 +14,9 @@ var zoomStep = 1;
 // Street View global variables
 var panoramaZoom = 0;
 var panoramaZoomStep = 0.2;
+var pitch = 0;
+var heading = 0;
+var pitchHeadingStep = 2;
 
 function initialize() {
 	// map options
@@ -44,34 +47,59 @@ function getLatLngAndZoom() {
 	zoom = map.getZoom();
 }
 
+function getPitchAndHeading(thePanorama) {
+	pitch = thePanorama.getPov().pitch;
+	heading = thePanorama.getPov().heading;
+}
+
 /**
 * Moves the map based on the direction specified
 **/
 function moveMap(direction) {
+	getLatLngAndZoom();
+	latLngStep = 1/zoom;
 
-	if(!isInStreetView()) {
-		getLatLngAndZoom();
-		latLngStep = 1/zoom;
-
-		switch (direction) {
-			case "N":
-				lat += latLngStep; 
-				break;
-			case "S":
-				lat -= latLngStep; 
-				break;
-			case "W":
-				lng -= latLngStep; 
-				break;
-			case "E":
-				lng += latLngStep; 
-				break;
-		}
-
-		map.panTo(new google.maps.LatLng(lat, lng)); 
-	} else {
-		console.log('Not implemented yet');
+	switch (direction) {
+		case "N":
+			lat += latLngStep; 
+			break;
+		case "S":
+			lat -= latLngStep; 
+			break;
+		case "W":
+			lng -= latLngStep; 
+			break;
+		case "E":
+			lng += latLngStep; 
+			break;
 	}
+
+	map.panTo(new google.maps.LatLng(lat, lng)); 
+}
+
+function rotate360(direction) {
+	var thePanorama = map.getStreetView();
+	getPitchAndHeading(thePanorama);
+
+	switch (direction) {
+		case "N":
+			pitch += pitchHeadingStep;
+			break;
+		case "S":
+			pitch -= pitchHeadingStep;
+			break;
+		case "W":
+			heading -= pitchHeadingStep;
+			break;
+		case "E":
+			heading += pitchHeadingStep;
+			break;
+	}
+
+	thePanorama.setPov({
+				heading : heading,
+				pitch : pitch
+			});
 }
 
 /**

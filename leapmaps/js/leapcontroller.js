@@ -76,6 +76,9 @@ function handleCircle(frame, gesture) {
   }
 }
 
+/**
+* Handles the key type gesture
+**/
 function handleKeyTap(frame, gesture) {
   var handIds = gesture.handIds;
   handIds.forEach(function(handId) {
@@ -116,7 +119,10 @@ function handleSwipe(gesture) {
       }                  
   }
 
-  moveMap(swipeDirection);
+  if(isInStreetView())
+    rotate360(swipeDirection);
+  else 
+    moveMap(swipeDirection);
 }
 
 /**
