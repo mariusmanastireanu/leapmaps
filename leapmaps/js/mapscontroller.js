@@ -5,6 +5,7 @@ var lng = 23.59061690807345;
 
 // Radius in which a Street View is available, used in later checks and messages
 var radius = 150;
+var streetViewAngleThreshold = 40;
 
 // Google Maps global variables
 var zoom = 10;
@@ -129,6 +130,21 @@ function zoomMap(direction) {
 
 		map.getStreetView().setZoom(panoramaZoom);
 	}
+}
+
+function moveStreetView() {
+		heading = map.getStreetView().getPov().heading;
+		if (heading < 0) {
+			heading += 360;
+		}
+
+		for(var i = 0; i < map.getStreetView().getLinks().length; i++) {
+			var thisHeading = map.getStreetView().getLinks()[i].heading;
+			if (heading > thisHeading - streetViewAngleThreshold && 
+					heading < thisHeading + streetViewAngleThreshold) {
+				map.getStreetView().setPano(map.getStreetView().getLinks()[i].pano);
+			}
+		}
 }
 
 /**
