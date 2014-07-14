@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////
 // doc: https://developer.leapmotion.com/getting-started/javascript
 
-
 var hand, finger;
 
 var numberOfZoomIn = 0;
@@ -15,28 +14,39 @@ var leapOptions = {
   enableGestures: true 
 };
 
-var controller = Leap.loop(leapOptions, function(frame){
-    //... handle frame data
-    if(frame.valid && frame.gestures.length > 0) {
-      frame.gestures.forEach(function(gesture) {
-        // Classifying the type of gesture detected by the Leap Motion Controller
-        switch (gesture.type){
-          case "circle":
-              handleCircle(frame, gesture);
-              break;
-          case "keyTap":
-              handleKeyTap(frame, gesture);
-              break;
-          case "screenTap":
-              console.log("Screen Tap Gesture");
-              break;
-          case "swipe":
-              handleSwipe(gesture);
-              break;
-        }
-    });
+var controller = Leap.loop(leapOptions, function(frame) {
+  // TODO zoom v2.
+  // zoomV2(frame);
+
+  //... handle frame data
+  if(frame.valid && frame.gestures.length > 0) {
+    frame.gestures.forEach(function(gesture) {
+      // Classifying the type of gesture detected by the Leap Motion Controller
+      switch (gesture.type) {
+        case "circle":
+            // TODO : uncomment this
+            // handleCircle(frame, gesture);
+            break;
+        case "keyTap":
+            // TODO : uncomment this
+            // handleKeyTap(frame, gesture);
+            break;
+        case "screenTap":
+            // TODO : uncomment this
+            // console.log("Screen Tap Gesture");
+            break;
+        case "swipe":
+            // TODO : uncomment this
+             handleSwipe(gesture);
+            break;
+      }
+  });
   }
 });
+
+function isOneHand(frame) {
+  return frame.hands.length == 1 && frame.hands[0].confidence > 0.75;
+}
 
 /**
 * Handles the circle gesture. 
@@ -150,4 +160,59 @@ function getFingerName(fingerType) {
       return 'Pinky';
     break;
   }
+}
+
+function avgHandPosition(hand, historySamples) {
+        var sum = Leap.vec3.create();
+        Leap.vec3.copy(sum, hand.palmPosition);
+        for(var s = 1; s < historySamples; s++){
+            var oldHand = controller.frame(s).hand(hand.id)
+            if(!oldHand.valid) break;
+            Leap.vec3.add(sum, oldHand.palmPosition, sum);
+        }
+        Leap.vec3.scale(sum, sum, 1/s);
+        return sum;
+}
+
+function zoomV2(frame) {
+    if (isOneHand(frame)) {
+      var average = avgHandPosition(frame.hands[0], 5000);
+      console.log(average[1] + "..." + Math.floor(average[1] * 15));
+      map.setZoom(computeZoom(average[1]));
+  }
+}
+
+function computeZoom(n) {
+  if (n < 70)
+    return 18;
+  if (n < 83)
+    return 17;
+  if (n < 96)
+    return 16;
+  if (n < 100)
+    return 15;
+  if (n < 113)
+    return 14;
+  if (n < 126)
+    return 13;
+  if (n < 139)
+    return 12;
+  if (n < 152)
+    return 11;
+  if (n < 165)
+    return 10;
+  if (n < 178)
+    return 9;
+  if (n < 191)
+    return 8;
+  if (n < 203)
+    return 7;
+  if (n < 227)
+    return 6;
+  if (n < 240)
+    return 5;
+  if (n < 254)
+    return 4;
+  else 
+    return 3;
 }
