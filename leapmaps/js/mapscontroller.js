@@ -139,15 +139,17 @@ function zoomMap(direction) {
 function moveStreetView(direction) {
 		heading = map.getStreetView().getPov().heading;
 
+		heading = heading % 360;
+
 		if (heading < 0) {
 			heading += 360;
-		}
+		} 
 
 		if (!direction) {
 			heading = heading - 180;
 			if (heading < 0) {
 				heading += 360;
-			}
+			} 
 		}
 
 		console.log('my heading: ' + heading);
@@ -163,7 +165,7 @@ function moveStreetView(direction) {
 					thisHeading = thisHeading - 180;
 					if (thisHeading < 0) {
 						thisHeading += 360;
-					}
+					} 
 				}
 
 				map.getStreetView().setPov({
