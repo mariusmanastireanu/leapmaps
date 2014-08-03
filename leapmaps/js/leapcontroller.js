@@ -3,8 +3,8 @@
 
 var hand, finger;
 
-var numberOfZoomIn = 0;
-var numberOfZoomOut = 0;
+var numberOfClockwise = 0;
+var numberOfCounterClockwise = 0;
 
 var switchMode = 0;
 
@@ -14,9 +14,11 @@ var leapOptions = {
   enableGestures: true 
 };
 
+
 var controller = Leap.loop(leapOptions, function(frame) {
   // TODO zoom v2.
   // zoomV2(frame);
+
 
   //... handle frame data
   if(frame.valid && frame.gestures.length > 0) {
@@ -25,7 +27,7 @@ var controller = Leap.loop(leapOptions, function(frame) {
       switch (gesture.type) {
         case "circle":
             // TODO : uncomment this
-            // handleCircle(frame, gesture);
+            handleCircle(frame, gesture);
             break;
         case "keyTap":
             // TODO : uncomment this
@@ -55,6 +57,8 @@ function isOneHand(frame) {
 function handleCircle(frame, gesture) {
   switchMode = 0;
 
+  console.log('circle');
+
   var clockwise = false;
   var pointableID = gesture.pointableIds[0];
   var direction = frame.pointable(pointableID).direction;
@@ -69,18 +73,27 @@ function handleCircle(frame, gesture) {
       clockwise = true;
 
     if (clockwise) {
-      numberOfZoomIn++;
+      numberOfClockwise++;
 
-      if (numberOfZoomIn == 10) {
-        numberOfZoomIn = 0 ;
+      if (numberOfClockwise == 35) {
+        numberOfClockwise = 0;
+
+      if(isInStreetView())
+        moveStreetView(clockwise);
+      else 
         zoomMap(clockwise);
       }
     } else {
-      numberOfZoomOut++;
+      numberOfCounterClockwise++;
 
-      if (numberOfZoomOut == 10) {
-        numberOfZoomOut = 0;
-      zoomMap(clockwise);
+      if (numberOfCounterClockwise == 35) {
+        numberOfCounterClockwise = 0;
+      
+
+      if(isInStreetView())
+        moveStreetView(clockwise);
+      else 
+        zoomMap(clockwise);
       }
     }
   }

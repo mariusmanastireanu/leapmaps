@@ -5,6 +5,7 @@ var lng = 23.59061690807345;
 
 // Radius in which a Street View is available, used in later checks and messages
 var radius = 150;
+// Radius in which a new panorama is available
 var streetViewAngleThreshold = 40;
 
 // Google Maps global variables
@@ -17,7 +18,7 @@ var panoramaZoom = 0;
 var panoramaZoomStep = 0.2;
 var pitch = 0;
 var heading = 0;
-var pitchHeadingStep = 2;
+var pitchHeadingStep = 1.35;
 
 function initialize() {
 	// map options
@@ -67,10 +68,10 @@ function moveMap(direction) {
 		case "S":
 			lat -= latLngStep; 
 			break;
-		case "W":
+		case "E":
 			lng -= latLngStep; 
 			break;
-		case "E":
+		case "W":
 			lng += latLngStep; 
 			break;
 	}
@@ -89,10 +90,10 @@ function rotate360(direction) {
 		case "S":
 			pitch -= pitchHeadingStep;
 			break;
-		case "W":
+		case "E":
 			heading -= pitchHeadingStep;
 			break;
-		case "E":
+		case "W":
 			heading += pitchHeadingStep;
 			break;
 	}
@@ -132,17 +133,43 @@ function zoomMap(direction) {
 	}
 }
 
-function moveStreetView() {
+/**
+* Moves the street view point of view
+**/
+function moveStreetView(direction) {
 		heading = map.getStreetView().getPov().heading;
+
 		if (heading < 0) {
 			heading += 360;
 		}
 
+		if (!direction) {
+			heading = heading - 180;
+			if (heading < 0) {
+				heading += 360;
+			}
+		}
+
+		console.log('my heading: ' + heading);
+
 		for(var i = 0; i < map.getStreetView().getLinks().length; i++) {
 			var thisHeading = map.getStreetView().getLinks()[i].heading;
+			console.log('avl.heading: ' + thisHeading);
 			if (heading > thisHeading - streetViewAngleThreshold && 
 					heading < thisHeading + streetViewAngleThreshold) {
 				map.getStreetView().setPano(map.getStreetView().getLinks()[i].pano);
+				
+				if(!direction) {
+					thisHeading = thisHeading - 180;
+					if (thisHeading < 0) {
+						thisHeading += 360;
+					}
+				}
+
+				map.getStreetView().setPov({
+					heading : thisHeading,
+					pitch: map.getStreetView().getPov().pitch
+				});
 			}
 		}
 }
