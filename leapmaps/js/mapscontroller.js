@@ -28,12 +28,23 @@ function initialize() {
 		maxZoom: 18,
 		minZoom: 3,
 		panControl: false,
-		zoomControl: false
+		zoomControl: false,
+		draggable: true
 	};
 
 	// map element
 	map = new google.maps.Map(document.getElementById("map-canvas"),
 		mapOptions);
+
+	// TODO - remove this
+	google.maps.event.addListener(map, 'mousemove', function(event) {
+		// map.panTo(new google.maps.LatLng(event.latLng.lat(), event.latLng.lng()));
+	});
+
+	// TODO - remove this
+	google.maps.event.addListener(map, 'drag', function(arg) {
+		console.log("map was dragged... " + (arg == null) ? JSON.stringify(arg) : "");
+	});
 }
 
 // loads the map after the page is loaded
@@ -91,10 +102,10 @@ function rotate360(direction) {
 			pitch -= pitchHeadingStep;
 			break;
 		case "E":
-			heading -= pitchHeadingStep;
+			heading += pitchHeadingStep;
 			break;
 		case "W":
-			heading += pitchHeadingStep;
+			heading -= pitchHeadingStep;
 			break;
 	}
 

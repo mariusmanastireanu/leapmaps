@@ -39,7 +39,7 @@ var controller = Leap.loop(leapOptions, function(frame) {
             break;
         case "swipe":
             // TODO : uncomment this
-             handleSwipe(gesture);
+            handleSwipe(gesture);
             break;
       }
   });
