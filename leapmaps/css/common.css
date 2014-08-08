@@ -30,3 +30,8 @@ body {
 	z-index: 100;
 	background: rgba(34, 29, 60, 0.8);
 }
+
+#cursor-canvas {
+	position: absolute;
+	z-index: 9999;
+}

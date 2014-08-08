@@ -1,231 +1,289 @@
-///////////////////////////////////////////////////////////////////
-// doc: https://developer.leapmotion.com/getting-started/javascript
+LeapMotionController = {
 
-var hand, finger;
+  switchMode : 0,
+  numberOfClockwise : 0,
+  numberOfCounterClockwise : 0,
 
-var numberOfClockwise = 0;
-var numberOfCounterClockwise = 0;
+  controller : Leap.loop({
+    // options
+    enableGestures: true 
+  }, // function called each loop 
+    function(frame) {
 
-var switchMode = 0;
+    LeapMotionController.computeHandPosition(frame);  
+    LeapMotionController.detectAndHandleGestures(frame);
 
+  }),
 
-// Leap.loop uses browser's requestAnimationFrame
-var leapOptions = { 
-  enableGestures: true 
-};
+  /**
+  * Computes the current x and y coordinates \
+  * based on window width and height
+  *
+  * frame : current frame
+  **/
+  computeHandPosition : function (frame) {
+    if (frame.valid 
+      && frame.hands.length == 1
+      && frame.pointables.length > 0) {
 
+      var position = frame.pointables[0].stabilizedTipPosition;
+      var normalized = frame.interactionBox.normalizePoint(position, true);
 
-var controller = Leap.loop(leapOptions, function(frame) {
-  // TODO zoom v2.
-  // zoomV2(frame);
+      var x = window.innerWidth * normalized[0];
+      var y = window.innerHeight * (1 - normalized[1]);
 
+      Controller.drawCursor(x, y);
+      LeapMotionController.computeNewXandY(x, y);
 
-  //... handle frame data
-  if(frame.valid && frame.gestures.length > 0) {
-    frame.gestures.forEach(function(gesture) {
-      // Classifying the type of gesture detected by the Leap Motion Controller
-      switch (gesture.type) {
-        case "circle":
-            // TODO : uncomment this
-            handleCircle(frame, gesture);
-            break;
-        case "keyTap":
-            // TODO : uncomment this
-            // handleKeyTap(frame, gesture);
-            break;
-        case "screenTap":
-            // TODO : uncomment this
-            // console.log("Screen Tap Gesture");
-            break;
-        case "swipe":
-            // TODO : uncomment this
-            handleSwipe(gesture);
-            break;
-      }
-  });
-  }
-});
+    }
+  },
 
-function isOneHand(frame) {
-  return frame.hands.length == 1 && frame.hands[0].confidence > 0.75;
-}
+  /**
+  * This function maps the hand position, given by the arguments
+  * x and y, onto the [-10,10] domain, which represents offset pixels
+  * from the current position of the center of the map.
+  * After the new position is computed, this function calls 
+  * the google maps controller to pan the map to the new destination
+  *
+  * There is a safe space in the center of the screen,
+  * which is defined by a ratio of 1/3 of the width and height
+  * of the browser. 
+  * If the hand (cursor) is positioned in the safe space, the
+  * map will not pan.
+  *
+  * Based on the offset of the hand position (cursor) from the 
+  * center of the screen, the map is panned with less pixels
+  * or more pixels, simulating acceleration in movement
+  * 
+  * x : x coordinate
+  * y : y coordinate
+  **/
+  computeNewXandY : function(x, y) {
+    var leftSize = window.innerWidth * 0.33;
+    var rightSize = window.innerWidth * 0.66;
 
-/**
-* Handles the circle gesture. 
-* Based on its direction it should zoom in or zoom out the map
-**/
-function handleCircle(frame, gesture) {
-  switchMode = 0;
+    var topSize = window.innerHeight * 0.33;
+    var bottomSize = window.innerHeight * 0.66;
 
-  console.log('circle');
+    var newX = 0;
+    var newY = 0;
 
-  var clockwise = false;
-  var pointableID = gesture.pointableIds[0];
-  var direction = frame.pointable(pointableID).direction;
+    if (x > rightSize)
+      newX = LeapMotionController.mapValueToInterval(x, rightSize, window.innerWidth, 0, 10);
+    else if (x < leftSize)
+      newX = LeapMotionController.mapValueToInterval(x, 0, leftSize, -10, 0);
 
-  // This check solves a small bug
-  // When making a circle with an pointable object (such as a pen)
-  // Sometimes the direction is 'undefined'
-  if (direction) {
-    var dotProduct = Leap.vec3.dot(direction, gesture.normal);
+    if (y > bottomSize)
+      newY = LeapMotionController.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 10);
+    else if (y < topSize)
+      newY = LeapMotionController.mapValueToInterval(y, 0, topSize, -10, 0);
+    
+    MapsController.panBy(newX, newY);
+  },
 
-    if (dotProduct  >  0) 
-      clockwise = true;
+  /**
+  * This is a generic helper linear function that maps a value (x)  
+  * from the given domain [a, b] to the given range [c, d].
+  * f(a) = c and f(b) = d
+  *
+  * Three liniar maps are defined in order to achieve this.
+  *
+  *** f1: This map shifts the initial endpoint of the interval [a, b] to the origin
+  *** f1(x) = x - a, therefore [a, b] --> [0, b-a]
+  *
+  *** f2: This scales the interval [0, b-a] so that the right endpoint becomes d-c
+  *** f2(x) = x * (d - c)/(b - a)
+  *** note: the length of the image interval is the same as the interval [c,d]
+  *
+  *** f3: This shifts [0, d-c] onto [c,d]
+  *** f3(x) = x + c
+  *
+  * Puting it together: f(x) = f3(f2(f1(x)))
+  *
+  * x : the value for which the function should be computed
+  * a : lowest value of the domain [a, b]
+  * b : highest value of the domain [a, b]
+  * c : lowest value of the range [c, d]
+  * d : highest value of the range [c, d]
+  *
+  * return : f(x), where f: [a, b] --> [c, d]
+  **/
+  mapValueToInterval : function (x, a, b, c, d) {
+    return Math.round(((d - c)/(b - a)) * (x - a) + c);
+  },
 
-    if (clockwise) {
-      numberOfClockwise++;
+  /**
+  * Detects if a gesture is present
+  * and calls the appropriate method
+  *
+  * frame : current frame
+  **/
+  detectAndHandleGestures : function (frame) {
+    if(frame.valid && frame.gestures.length > 0) {
+      frame.gestures.forEach( function(gesture) {
+        // Classifying the type of gesture detected by the Leap Motion Controller
+        switch (gesture.type) {
+          case "circle":
+          console.log('a circle');
+              // TODO : uncomment this
+              //handleCircle(frame, gesture);
+              break;
+          case "keyTap":
+              // TODO : uncomment this
+              //handleKeyTap(frame, gesture);
+              break;
+          case "screenTap":
+              // TODO : uncomment this
+              // console.log("Screen Tap Gesture");
+              break;
+          case "swipe":
+              // TODO : uncomment this
+              // handleSwipe(gesture);
+              break;
+        }
+      });
+    }
+  },
 
-      if (numberOfClockwise == 35) {
-        numberOfClockwise = 0;
+  /**
+  * Handles the circle gesture. 
+  * 
+  * frame : current frame
+  * gesture : the gesture
+  **/
+  handleCircle : function (frame, gesture) {
+    console.log('circle');
 
-      if(isInStreetView())
-        moveStreetView(clockwise);
-      else 
-        zoomMap(clockwise);
-      }
-    } else {
-      numberOfCounterClockwise++;
+    var clockwise = false;
+    var pointableID = gesture.pointableIds[0];
+    var direction = frame.pointable(pointableID).direction;
 
-      if (numberOfCounterClockwise == 35) {
-        numberOfCounterClockwise = 0;
-      
+    // This check solves a small bug
+    // When making a circle with an pointable object (such as a pen)
+    // Sometimes the direction is 'undefined'
+    if (direction) {
+      var dotProduct = Leap.vec3.dot(direction, gesture.normal);
 
-      if(isInStreetView())
-        moveStreetView(clockwise);
-      else 
-        zoomMap(clockwise);
+      if (dotProduct  >  0) 
+        clockwise = true;
+
+      if (clockwise) {
+        numberOfClockwise++;
+
+        if (numberOfClockwise == 35) {
+          numberOfClockwise = 0;
+
+        if(isInStreetView())
+          moveStreetView(clockwise);
+        else 
+          zoomMap(clockwise);
+        }
+      } else {
+        numberOfCounterClockwise++;
+
+        if (numberOfCounterClockwise == 35) {
+          numberOfCounterClockwise = 0;
+        
+
+        if(isInStreetView())
+          moveStreetView(clockwise);
+        else 
+          zoomMap(clockwise);
+        }
       }
     }
-  }
-}
+  },
 
-/**
-* Handles the key type gesture
-**/
-function handleKeyTap(frame, gesture) {
-  var handIds = gesture.handIds;
-  handIds.forEach(function(handId) {
-    var hand = frame.hand(handId);
+  /**
+  * Handles the key type gesture
+  * 
+  * frame : current frame
+  * gesture : the gesture
+  **/
+  handleKeyTap : function(frame, gesture) {
+    var handIds = gesture.handIds;
+    handIds.forEach(function(handId) {
+      var hand = frame.hand(handId);
+      
+        switchMode++;
     
-      switchMode++;
-  
-      if (switchMode == 3) {
-        switchMapMode();
-        switchMode = 0;
-      }
-  });
-}
-
-/**
-* Handles the swipe gesture.
-* Based on its type it should move the map
-**/
-function handleSwipe(gesture) {
-  switchMode = 0;
-
-  //Classify swipe as either horizontal or vertical
-  var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
-
-  if(isHorizontal) {
-      // Horizontal swipe
-      if(gesture.direction[0] > 0) {
-          swipeDirection = "E";
-      } else {
-          swipeDirection = "W";
-      }
-  } else { 
-      // Vertical swipe
-      if(gesture.direction[1] > 0){
-          swipeDirection = "N";
-      } else {
-          swipeDirection = "S";
-      }                  
-  }
-
-  if(isInStreetView())
-    rotate360(swipeDirection);
-  else 
-    moveMap(swipeDirection);
-}
-
-/**
-* Helper function to identify the type of the finger detected by Leap Motion Controller
-**/
-function getFingerName(fingerType) {
-  switch(fingerType) {
-    case 0:
-      return 'Thumb';
-    break;
-
-    case 1:
-      return 'Index';
-    break;
-
-    case 2:
-      return 'Middle';
-    break;
-
-    case 3:
-      return 'Ring';
-    break;
-
-    case 4:
-      return 'Pinky';
-    break;
-  }
-}
-
-function avgHandPosition(hand, historySamples) {
-        var sum = Leap.vec3.create();
-        Leap.vec3.copy(sum, hand.palmPosition);
-        for(var s = 1; s < historySamples; s++){
-            var oldHand = controller.frame(s).hand(hand.id)
-            if(!oldHand.valid) break;
-            Leap.vec3.add(sum, oldHand.palmPosition, sum);
+        if (switchMode == 3) {
+          alert('switch');
+          switchMapMode();
+          switchMode = 0;
         }
-        Leap.vec3.scale(sum, sum, 1/s);
-        return sum;
-}
+    });
+  },
 
-function zoomV2(frame) {
-    if (isOneHand(frame)) {
-      var average = avgHandPosition(frame.hands[0], 5000);
-      console.log(average[1] + "..." + Math.floor(average[1] * 15));
-      map.setZoom(computeZoom(average[1]));
-  }
-}
+  /**
+  * Handles the swipe gesture.
+  * 
+  * gesture : the gesture
+  **/
+  handleSwipe : function(gesture) {
+    switchMode = 0;
 
-function computeZoom(n) {
-  if (n < 70)
-    return 18;
-  if (n < 83)
-    return 17;
-  if (n < 96)
-    return 16;
-  if (n < 100)
-    return 15;
-  if (n < 113)
-    return 14;
-  if (n < 126)
-    return 13;
-  if (n < 139)
-    return 12;
-  if (n < 152)
-    return 11;
-  if (n < 165)
-    return 10;
-  if (n < 178)
-    return 9;
-  if (n < 191)
-    return 8;
-  if (n < 203)
-    return 7;
-  if (n < 227)
-    return 6;
-  if (n < 240)
-    return 5;
-  if (n < 254)
-    return 4;
-  else 
-    return 3;
+    //Classify swipe as either horizontal or vertical
+    var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+
+    if (isHorizontal) {
+        // Horizontal swipe
+        if(gesture.direction[0] > 0) {
+            swipeDirection = "E";
+        } else {
+            swipeDirection = "W";
+        }
+    } else { 
+        // Vertical swipe
+        if(gesture.direction[1] > 0){
+            swipeDirection = "N";
+        } else {
+            swipeDirection = "S";
+        }                  
+    }
+
+    if (isInStreetView())
+      rotate360(swipeDirection);
+    else 
+      moveMap(swipeDirection);
+  },
+
+  /**
+  * Returns true if only one hand is present in the interaction box 
+  * 
+  * frame : current frame
+  **/
+  isOneHand : function (frame) {
+    return frame.hands.length == 1;
+  },
+
+  /**
+  * Helper function to identify the type of the finger detected by Leap Motion Controller
+  *
+  * fingerType : the finger type
+  * returns : the name of the finger
+  **/
+  getFingerName : function (fingerType) {
+    switch(fingerType) {
+      case 0:
+        return 'Thumb';
+      break;
+
+      case 1:
+        return 'Index';
+      break;
+
+      case 2:
+        return 'Middle';
+      break;
+
+      case 3:
+        return 'Ring';
+      break;
+
+      case 4:
+        return 'Pinky';
+      break;
+    }
+  }  
 }

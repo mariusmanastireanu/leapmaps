@@ -1,225 +1,204 @@
-// Generic global variables
-var map;
-var lat = 46.76907446541323;
-var lng = 23.59061690807345;
+MapsController = {
 
-// Radius in which a Street View is available, used in later checks and messages
-var radius = 150;
-// Radius in which a new panorama is available
-var streetViewAngleThreshold = 40;
+	map : null,
 
-// Google Maps global variables
-var zoom = 10;
-var latLngStep = 0.1;
-var zoomStep = 1;
+	lat : 46.76907446541323,
+	lng : 23.59061690807345,
 
-// Street View global variables
-var panoramaZoom = 0;
-var panoramaZoomStep = 0.2;
-var pitch = 0;
-var heading = 0;
-var pitchHeadingStep = 1.35;
+	pitchHeadingStep : 1.35,
 
-function initialize() {
-	// map options
-	var mapOptions = {
-		center: new google.maps.LatLng(lat, lng),
-		zoom: zoom,
-		maxZoom: 18,
-		minZoom: 3,
-		panControl: false,
-		zoomControl: false,
-		draggable: true
-	};
+	streetViewRenderingRadius : 150,
+	streetViewAngleThreshold : 40,
 
-	// map element
-	map = new google.maps.Map(document.getElementById("map-canvas"),
-		mapOptions);
+	zoom : 10,
+	zoomStep : 1,
+	panoramaZoomStep : 0.2,
 
-	// TODO - remove this
-	google.maps.event.addListener(map, 'mousemove', function(event) {
-		// map.panTo(new google.maps.LatLng(event.latLng.lat(), event.latLng.lng()));
-	});
+	/**
+	* It initializes the Google Map
+	**/
+	initialize : function() {
 
-	// TODO - remove this
-	google.maps.event.addListener(map, 'drag', function(arg) {
-		console.log("map was dragged... " + (arg == null) ? JSON.stringify(arg) : "");
-	});
-}
+		var mapOptions = {
+			center: new google.maps.LatLng(MapsController.lat, MapsController.lng),
+			zoom: MapsController.zoom,
+			maxZoom: 18,
+			minZoom: 3,
+			panControl: false,
+			zoomControl: false,
+			draggable: true			
+		}
 
-// loads the map after the page is loaded
-google.maps.event.addDomListener(window, 'load', initialize);
+		MapsController.map = new google.maps.Map(document.getElementById("map-canvas"),
+			mapOptions);
+	},
 
+	/**
+	* Returns true if the map is street view or false otherwise
+	**/
+	isInStreetView : function () {
+		return MapsController.map.getStreetView().getVisible();
+	},
 
-/**
-* Retrieves and populates the lat, lng and zoom variables with the current dates
-**/
-function getLatLngAndZoom() {
-	lat = map.getCenter().lat();
-	lng = map.getCenter().lng();
-	zoom = map.getZoom();
-}
+	/**
+	* Pans the map with newX on horizontal and newY on vertical
+	* 
+	* newX : horizontal pixels
+	* newY : vertical pixels
+	**/
+	panBy : function (newX, newY) {
+		if(!MapsController.isInStreetView()) {
+			if (newX != 0 || newY != 0) {
+				MapsController.map.panBy(newX, newY);
+			}
+		}
+	},
 
-function getPitchAndHeading(thePanorama) {
-	pitch = thePanorama.getPov().pitch;
-	heading = thePanorama.getPov().heading;
-}
+	/**
+	* Moves the map based on the direction specified
+	**/
+	moveMap : function (newLat, newLng) {
+		if(!MapsController.isInStreetView()) {
+			MapsController.map.panTo(new google.maps.LatLng(newLat, newLng)); 
+		}
+	},
 
-/**
-* Moves the map based on the direction specified
-**/
-function moveMap(direction) {
-	getLatLngAndZoom();
-	latLngStep = 1/zoom;
+	/**
+	* Rotates the map based on the direction passed as argument
+	* 
+	* direction : direction
+	**/
+	rotate360 : function (direction) {
+		if (MapsController.isInStreetView()) {
+			var pitch = MapsController.map.getStreetView().getPov().pitch;
+			var heading = MapsController.map.getStreetView().getPov().heading;
 
-	switch (direction) {
-		case "N":
-			lat += latLngStep; 
-			break;
-		case "S":
-			lat -= latLngStep; 
-			break;
-		case "E":
-			lng -= latLngStep; 
-			break;
-		case "W":
-			lng += latLngStep; 
-			break;
-	}
+			switch (direction) {
+				case "N":
+					pitch += MapsController.pitchHeadingStep;
+					break;
+				case "S":
+					pitch -= MapsController.pitchHeadingStep;
+					break;
+				case "E":
+					heading += MapsController.pitchHeadingStep;
+					break;
+				case "W":
+					heading -= MapsController.pitchHeadingStep;
+					break;
+			}
 
-	map.panTo(new google.maps.LatLng(lat, lng)); 
-}
-
-function rotate360(direction) {
-	var thePanorama = map.getStreetView();
-	getPitchAndHeading(thePanorama);
-
-	switch (direction) {
-		case "N":
-			pitch += pitchHeadingStep;
-			break;
-		case "S":
-			pitch -= pitchHeadingStep;
-			break;
-		case "E":
-			heading += pitchHeadingStep;
-			break;
-		case "W":
-			heading -= pitchHeadingStep;
-			break;
-	}
-
-	thePanorama.setPov({
-				heading : heading,
-				pitch : pitch
+			MapsController.map.getStreetView().setPov({
+						heading : heading,
+						pitch : pitch
 			});
-}
+		}
+	},
 
-/**
-* Zooms the map based on the direction specified
-* @direction - true means zoom in, false means zoom out
-**/
-function zoomMap(direction) {
 
-	if(!isInStreetView()) {
-		// Zoom map in Google Maps mode
-		getLatLngAndZoom();
+	/**
+	* Zooms the map based on the direction specified
+	*
+	* zoomIn : true means zoom in, false means zoom out
+	**/
+	zoomMap : function (zoomIn) {
+		if(!isInStreetView()) {
+			// Zoom map in Google Maps mode
+			var zoom = MapsController.map.getZoom();
 
-		if (direction) 
-			zoom += zoomStep;
-		else 
-			zoom -= zoomStep;
+			if (zoomIn) 
+				zoom += zoomStep;
+			else 
+				zoom -= zoomStep;
 
-		map.setZoom(zoom);
-	} else {
-		// Zoom map in Street View mode
-		panoramaZoom = map.getStreetView().getZoom();
+			MapsController.map.setZoom(zoom);
+		} else {
+			// Zoom map in Street View mode
+			var panoramaZoom = MapsController.map.getStreetView().getZoom();
 
-		if (direction) 
-			panoramaZoom += panoramaZoomStep;
-		else 
-			panoramaZoom -= panoramaZoomStep;
+			if (direction) 
+				panoramaZoom += panoramaZoomStep;
+			else 
+				panoramaZoom -= panoramaZoomStep;
 
-		map.getStreetView().setZoom(panoramaZoom);
-	}
-}
+			MapsController.map.getStreetView().setZoom(panoramaZoom);
+		}
+	},
 
-/**
-* Moves the street view point of view
-**/
-function moveStreetView(direction) {
-		heading = map.getStreetView().getPov().heading;
+	/**
+	* Moves the street view point of view based on the direction passed as argument
+	* 
+	* direction : true if forward, false otherwise
+	**/
+	moveStreetView : function (direction) {
+		if(MapsController.isInStreetView()) {
+			var heading = MapsController.map.getStreetView().getPov().heading;
+		 	heading = heading % 360;
 
-		heading = heading % 360;
-
-		if (heading < 0) {
-			heading += 360;
-		} 
-
-		if (!direction) {
-			heading = heading - 180;
 			if (heading < 0) {
 				heading += 360;
 			} 
-		}
 
-		console.log('my heading: ' + heading);
+			if (!direction) {
+				heading = heading - 180;
+				if (heading < 0) {
+					heading += 360;
+				} 
+			}
 
-		for(var i = 0; i < map.getStreetView().getLinks().length; i++) {
-			var thisHeading = map.getStreetView().getLinks()[i].heading;
-			console.log('avl.heading: ' + thisHeading);
-			if (heading > thisHeading - streetViewAngleThreshold && 
-					heading < thisHeading + streetViewAngleThreshold) {
-				map.getStreetView().setPano(map.getStreetView().getLinks()[i].pano);
-				
-				if(!direction) {
-					thisHeading = thisHeading - 180;
-					if (thisHeading < 0) {
-						thisHeading += 360;
-					} 
+			console.log('my heading: ' + heading);
+
+			for(var i = 0; i < MapsController.map.getStreetView().getLinks().length; i++) {
+				var thisHeading = MapsController.map.getStreetView().getLinks()[i].heading;
+				console.log('avl.heading: ' + thisHeading);
+				if (heading > thisHeading - MapsController.streetViewAngleThreshold && 
+						heading < thisHeading + MapsController.streetViewAngleThreshold) {
+					MapsController.map.getStreetView()
+						.setPano(MapsController.map.getStreetView().getLinks()[i].pano);
+					
+					if(!direction) {
+						thisHeading = thisHeading - 180;
+						if (thisHeading < 0) {
+							thisHeading += 360;
+						} 
+					}
+
+					MapsController.map.getStreetView().setPov({
+						heading : thisHeading,
+						pitch: MapsController.map.getStreetView().getPov().pitch
+					});
 				}
-
-				map.getStreetView().setPov({
-					heading : thisHeading,
-					pitch: map.getStreetView().getPov().pitch
-				});
 			}
 		}
-}
+	},
 
-/**
-* It switches the map mode between Google Maps and Street View
-**/
-function switchMapMode() {
-	
-	if(!isInStreetView()) {
-		// Initialize Street View at this coordinates
-		getLatLngAndZoom();
+	/**
+	* It switches the map mode between Google Maps and Street View
+	**/
+	switchMapMode : function () {
+		
+		if(!MapsController.isInStreetView()) {
+			var lat = MapsController.map.getCenter.lat();
+			var lng = MapsController.map.getCenter.lng();
 
-		// Check if Google has a StreetView image within 'radius' meters of the given location, and load that panorama
-		var sv = new google.maps.StreetViewService();
-		sv.getPanoramaByLocation(new google.maps.LatLng(lat, lng), 'radius', function(data, status) {
-			if (status == 'OK') {
-				var panoramaOptions = {
-					pano: data.location.pano,
-				};
-								
-				map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
-				map.getStreetView().setZoom(0);
-			} else {
-				console.log('There is no street view panorama available for a radius of ' + radius + ' meters at this coordinates: lat: ' + lat + ', lng: ' + lng);
-				console.log('Should display an warning message to the view');
-			}
-		});
-	} else {
-		// Disable Street View, switch to Google Maps
-		map.getStreetView().setVisible(false);
-	}
-}
-
-/**
-* Returns true if the map is street view or false otherwise
-**/
-function isInStreetView() {
-	return map.getStreetView().getVisible();
+			// Check if Google has a StreetView image within 'radius' meters of the given location, and load that panorama
+			var sv = new google.maps.StreetViewService();
+			sv.getPanoramaByLocation(new google.maps.LatLng(lat, lng), 'MapsController.streetViewRenderingRadius', function(data, status) {
+				if (status == 'OK') {
+					var panoramaOptions = {
+						pano: data.location.pano,
+					};
+									
+					MapsController.map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
+					MapsController.map.getStreetView().setZoom(0);
+				} else {
+					console.log('There is no street view panorama available for a radius of ' + radius + ' meters at this coordinates: lat: ' + lat + ', lng: ' + lng);
+					console.log('Should display an warning message to the view');
+				}
+			});
+		} else {
+			// Disable Street View, switch to Google Maps
+			MapsController.map.getStreetView().setVisible(false);
+		}
+	}	
 }
