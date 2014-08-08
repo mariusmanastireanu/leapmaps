@@ -102,7 +102,7 @@ MapsController = {
 	* zoomIn : true means zoom in, false means zoom out
 	**/
 	zoomMap : function (zoomIn) {
-		if(!isInStreetView()) {
+		if(!MapsController.isInStreetView()) {
 			// Zoom map in Google Maps mode
 			var zoom = MapsController.map.getZoom();
 
