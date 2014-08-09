@@ -36,22 +36,22 @@ Controller = {
 	attachDetachCanvas : function (shoudAttach) {
 		if (shoudAttach) {
 			if(document.getElementById("cursor-canvas") == null) {
+				// create canvas document
 				var cursorCnv = document.createElement("canvas");
+				cursorCnv.height = $(window).height();
+				cursorCnv.width = $(window).width();
 				cursorCnv.setAttribute("id", "cursor-canvas");
-				
-		    var bodyheight = $(window).height();
-				var bodywidth = $(window).width();
-
-				cursorCnv.height = bodyheight;
-				cursorCnv.width = bodywidth;
 
 				var wrp = document.getElementById("wrapper");
+				wrp.setAttribute("class", "no-mouse");
 				var mapCnv = document.getElementById("map-canvas");
 				wrp.insertBefore(cursorCnv, mapCnv);
 			}
 		} else {
 			if(document.getElementById("cursor-canvas")) {
 				document.getElementById("cursor-canvas").remove();
+				var wrp = document.getElementById("wrapper");
+				wrp.removeAttribute("class");
 			}
 		}
 	},
