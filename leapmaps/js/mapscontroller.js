@@ -74,19 +74,23 @@ MapsController = {
 			var heading = MapsController.map.getStreetView().getPov().heading;
 
 			switch (direction) {
-				case "N":
-					pitch += MapsController.pitchHeadingStep;
+				case "fromBottomToTop":
+					if (pitch < 90 - MapsController.pitchHeadingStep)
+						pitch += MapsController.pitchHeadingStep;
 					break;
-				case "S":
-					pitch -= MapsController.pitchHeadingStep;
+				case "fromTopToBottom":
+					if (pitch > -90 + MapsController.pitchHeadingStep)
+						pitch -= MapsController.pitchHeadingStep;
 					break;
-				case "E":
+				case "fromLeftToRight":
 					heading += MapsController.pitchHeadingStep;
 					break;
-				case "W":
+				case "fromRightToLeft":
 					heading -= MapsController.pitchHeadingStep;
 					break;
 			}
+
+			heading = heading % 360;
 
 			MapsController.map.getStreetView().setPov({
 						heading : heading,
@@ -178,8 +182,8 @@ MapsController = {
 	switchMapMode : function () {
 		
 		if(!MapsController.isInStreetView()) {
-			var lat = MapsController.map.getCenter.lat();
-			var lng = MapsController.map.getCenter.lng();
+			var lat = MapsController.map.getCenter().lat();
+			var lng = MapsController.map.getCenter().lng();
 
 			// Check if Google has a StreetView image within 'radius' meters of the given location, and load that panorama
 			var sv = new google.maps.StreetViewService();
@@ -192,7 +196,7 @@ MapsController = {
 					MapsController.map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
 					MapsController.map.getStreetView().setZoom(0);
 				} else {
-					console.log('There is no street view panorama available for a radius of ' + radius + ' meters at this coordinates: lat: ' + lat + ', lng: ' + lng);
+					console.log('There is no street view panorama available for a radius of ' + MapsController.radius + ' meters at this coordinates: lat: ' + lat + ', lng: ' + lng);
 					console.log('Should display an warning message to the view');
 				}
 			});

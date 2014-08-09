@@ -10,6 +10,22 @@ LeapMotionController = {
   }, // function called each loop 
     function(frame) {
 
+
+    if (frame.valid 
+      && frame.hands.length == 1
+      && frame.pointables.length > 0) {
+
+      var position = frame.pointables[0].stabilizedTipPosition;
+      var normalized = frame.interactionBox.normalizePoint(position, true);
+
+      var x = window.innerWidth * normalized[0];
+      var y = window.innerHeight * (1 - normalized[1]);
+
+
+      // TODO - implement or delete
+    }
+
+
       LeapMotionController.attachDetachCanvas(frame);
       LeapMotionController.computeHandPosition(frame);  
       LeapMotionController.detectAndHandleGestures(frame);
@@ -136,12 +152,10 @@ LeapMotionController = {
               // handleKeyTap(frame, gesture);
               break;
           case "screenTap":
-              // TODO : uncomment this
-              // console.log("Screen Tap Gesture");
+              LeapMotionController.handleScreenTap(frame);
               break;
           case "swipe":
-              // TODO : uncomment this
-              // handleSwipe(gesture);
+              LeapMotionController.handleSwipe(gesture);
               break;
         }
       });
@@ -155,7 +169,8 @@ LeapMotionController = {
   * gesture : the gesture
   **/
   handleCircle : function (frame, gesture) {
-    if (LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
+    if (LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1
+      /*&& gesture.state === "stop"*/) {
       // execute actions only if one finger is poining
       // solves bug while moving in maps view
 
@@ -225,6 +240,18 @@ LeapMotionController = {
   },
 
   /**
+  * Handles the key tap gesture
+  *
+  * frame : current frame
+  **/
+  handleScreenTap : function(frame) {
+    if(LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
+      console.log("Screen Tap Gesture");
+      MapsController.switchMapMode();
+    }
+  },
+
+  /**
   * Handles the swipe gesture.
   * 
   * gesture : the gesture
@@ -238,23 +265,22 @@ LeapMotionController = {
     if (isHorizontal) {
         // Horizontal swipe
         if(gesture.direction[0] > 0) {
-            swipeDirection = "E";
+            swipeDirection = "fromLeftToRight";
         } else {
-            swipeDirection = "W";
+            swipeDirection = "fromRightToLeft";
         }
     } else { 
         // Vertical swipe
         if(gesture.direction[1] > 0){
-            swipeDirection = "N";
+            swipeDirection = "fromBottomToTop";
         } else {
-            swipeDirection = "S";
+            swipeDirection = "fromTopToBottom";
         }                  
     }
 
-    if (isInStreetView())
-      rotate360(swipeDirection);
-    else 
-      moveMap(swipeDirection);
+    if (MapsController.isInStreetView) {
+      MapsController.rotate360(swipeDirection);
+    }
   },
 
   /**
@@ -274,13 +300,15 @@ LeapMotionController = {
   **/
   getNumberOfFingers : function (hand) {
     var extendedFingers = 0;
-    for (var f = 0; f < hand.fingers.length; f++) {
-        var finger = hand.fingers[f];
-        if (finger.extended) {
-          extendedFingers++;
-        }
+    if (hand) {
+      for (var f = 0; f < hand.fingers.length; f++) {
+          var finger = hand.fingers[f];
+          if (finger.extended) {
+            extendedFingers++;
+          }
+      }
     }
-    return extendedFingers
+    return extendedFingers;
   },
 
   /**
