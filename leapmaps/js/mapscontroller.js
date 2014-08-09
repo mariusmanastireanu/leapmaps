@@ -107,9 +107,9 @@ MapsController = {
 			var zoom = MapsController.map.getZoom();
 
 			if (zoomIn) 
-				zoom += zoomStep;
+				zoom += MapsController.zoomStep;
 			else 
-				zoom -= zoomStep;
+				zoom -= MapsController.zoomStep;
 
 			MapsController.map.setZoom(zoom);
 		} else {
@@ -117,9 +117,9 @@ MapsController = {
 			var panoramaZoom = MapsController.map.getStreetView().getZoom();
 
 			if (direction) 
-				panoramaZoom += panoramaZoomStep;
+				panoramaZoom += MapsController.panoramaZoomStep;
 			else 
-				panoramaZoom -= panoramaZoomStep;
+				panoramaZoom -= MapsController.panoramaZoomStep;
 
 			MapsController.map.getStreetView().setZoom(panoramaZoom);
 		}
@@ -200,5 +200,5 @@ MapsController = {
 			// Disable Street View, switch to Google Maps
 			MapsController.map.getStreetView().setVisible(false);
 		}
-	}	
+	}
 }

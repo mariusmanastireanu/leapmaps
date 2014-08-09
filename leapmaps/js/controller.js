@@ -15,11 +15,8 @@ Controller = {
 		$(document).ready(function() {
 		    var bodyheight = $(window).height();
 		    $("#map-canvas").height(bodyheight);
-		    Controller.computeCanvasSize();
-
+		    
 		    MapsController.initialize();
-
-		    // google.maps.event.addDomListener(window, 'load', MapsController.initialize);
 		});
 
 		// Add resize listener event
@@ -32,6 +29,34 @@ Controller = {
 	},
 
 	/**
+	* Attaches or detaches the canvas where the cursor should be painted
+	* 
+	* shouldAttach : true if the canvas should be attached
+	**/
+	attachDetachCanvas : function (shoudAttach) {
+		if (shoudAttach) {
+			if(document.getElementById("cursor-canvas") == null) {
+				var cursorCnv = document.createElement("canvas");
+				cursorCnv.setAttribute("id", "cursor-canvas");
+				
+		    var bodyheight = $(window).height();
+				var bodywidth = $(window).width();
+
+				cursorCnv.height = bodyheight;
+				cursorCnv.width = bodywidth;
+
+				var wrp = document.getElementById("wrapper");
+				var mapCnv = document.getElementById("map-canvas");
+				wrp.insertBefore(cursorCnv, mapCnv);
+			}
+		} else {
+			if(document.getElementById("cursor-canvas")) {
+				document.getElementById("cursor-canvas").remove();
+			}
+		}
+	},
+
+	/**
 	* Handles keypress events from the keyboard
 	*
 	* e : the event
@@ -40,7 +65,7 @@ Controller = {
 		
 		switch(e.which) {
 			case 104: // H button
-							addOrRemoveHelpWindow();
+							Controller.addOrRemoveHelpWindow();
 							break;
 			case 93: // ] button -- TODO: delete this
 							var evtDown = document.createEvent("MouseEvents");
@@ -101,12 +126,14 @@ Controller = {
 	* Computes the size of the canvas based on the screen size
 	**/
 	computeCanvasSize : function() {
-    var bodyheight = $(window).height();
-		var bodywidth = $(window).width();
-			
-		var canvas = document.getElementsByTagName('canvas')[0];
-		canvas.width  = bodywidth;
-		canvas.height = bodyheight;
+		if(document.getElementById("cursor-canvas")) {
+	    var bodyheight = $(window).height();
+			var bodywidth = $(window).width();
+				
+			var canvas = document.getElementsByTagName('canvas')[0];
+			canvas.width  = bodywidth;
+			canvas.height = bodyheight;
+		}
 	},
 
 	/**

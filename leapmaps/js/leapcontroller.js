@@ -10,13 +10,18 @@ LeapMotionController = {
   }, // function called each loop 
     function(frame) {
 
-    LeapMotionController.computeHandPosition(frame);  
-    LeapMotionController.detectAndHandleGestures(frame);
+      LeapMotionController.attachDetachCanvas(frame);
+      LeapMotionController.computeHandPosition(frame);  
+      LeapMotionController.detectAndHandleGestures(frame);
 
   }),
 
+  attachDetachCanvas : function (frame) {
+    Controller.attachDetachCanvas(LeapMotionController.isOneHand(frame));
+  },
+
   /**
-  * Computes the current x and y coordinates \
+  * Computes the hand position in  x and y coordinates
   * based on window width and height
   *
   * frame : current frame
@@ -32,15 +37,15 @@ LeapMotionController = {
       var x = window.innerWidth * normalized[0];
       var y = window.innerHeight * (1 - normalized[1]);
 
+
       Controller.drawCursor(x, y);
       LeapMotionController.computeNewXandY(x, y);
-
     }
   },
 
   /**
   * This function maps the hand position, given by the arguments
-  * x and y, onto the [-10,10] domain, which represents offset pixels
+  * x and y, onto the [-15, 15] domain, which represents offset pixels
   * from the current position of the center of the map.
   * After the new position is computed, this function calls 
   * the google maps controller to pan the map to the new destination
@@ -69,14 +74,14 @@ LeapMotionController = {
     var newY = 0;
 
     if (x > rightSize)
-      newX = LeapMotionController.mapValueToInterval(x, rightSize, window.innerWidth, 0, 10);
+      newX = LeapMotionController.mapValueToInterval(x, rightSize, window.innerWidth, 0, 15);
     else if (x < leftSize)
-      newX = LeapMotionController.mapValueToInterval(x, 0, leftSize, -10, 0);
+      newX = LeapMotionController.mapValueToInterval(x, 0, leftSize, -15, 0);
 
     if (y > bottomSize)
-      newY = LeapMotionController.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 10);
+      newY = LeapMotionController.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 15);
     else if (y < topSize)
-      newY = LeapMotionController.mapValueToInterval(y, 0, topSize, -10, 0);
+      newY = LeapMotionController.mapValueToInterval(y, 0, topSize, -15, 0);
     
     MapsController.panBy(newX, newY);
   },
@@ -124,13 +129,11 @@ LeapMotionController = {
         // Classifying the type of gesture detected by the Leap Motion Controller
         switch (gesture.type) {
           case "circle":
-          console.log('a circle');
-              // TODO : uncomment this
-              //handleCircle(frame, gesture);
+              LeapMotionController.handleCircle(frame, gesture);
               break;
           case "keyTap":
               // TODO : uncomment this
-              //handleKeyTap(frame, gesture);
+              // handleKeyTap(frame, gesture);
               break;
           case "screenTap":
               // TODO : uncomment this
@@ -152,45 +155,51 @@ LeapMotionController = {
   * gesture : the gesture
   **/
   handleCircle : function (frame, gesture) {
-    console.log('circle');
+    if (LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
+      // execute actions only if one finger is poining
+      // solves bug while moving in maps view
 
-    var clockwise = false;
-    var pointableID = gesture.pointableIds[0];
-    var direction = frame.pointable(pointableID).direction;
+      var clockwise = false;
+      var pointableID = gesture.pointableIds[0];
+      var direction = frame.pointable(pointableID).direction;
 
-    // This check solves a small bug
-    // When making a circle with an pointable object (such as a pen)
-    // Sometimes the direction is 'undefined'
-    if (direction) {
-      var dotProduct = Leap.vec3.dot(direction, gesture.normal);
 
-      if (dotProduct  >  0) 
-        clockwise = true;
+      // This check solves a small bug
+      // When making a circle with an pointable object (such as a pen)
+      // Sometimes the direction is 'undefined'
+      if (direction) {
+        var dotProduct = Leap.vec3.dot(direction, gesture.normal);
 
-      if (clockwise) {
-        numberOfClockwise++;
-
-        if (numberOfClockwise == 35) {
-          numberOfClockwise = 0;
-
-        if(isInStreetView())
-          moveStreetView(clockwise);
-        else 
-          zoomMap(clockwise);
+        if (dotProduct  >  0) {
+          clockwise = true;
         }
-      } else {
-        numberOfCounterClockwise++;
 
-        if (numberOfCounterClockwise == 35) {
-          numberOfCounterClockwise = 0;
-        
+        if (clockwise) {
+          LeapMotionController.numberOfClockwise++;
 
-        if(isInStreetView())
-          moveStreetView(clockwise);
-        else 
-          zoomMap(clockwise);
+          if (LeapMotionController.numberOfClockwise == 35) {
+            LeapMotionController.numberOfClockwise = 0;
+
+            if (MapsController.isInStreetView()) {
+              MapsController.moveStreetView(true);
+            } else { 
+              MapsController.zoomMap(true);
+            }
+          }
+        } else {
+          LeapMotionController.numberOfCounterClockwise++;
+
+          if (LeapMotionController.numberOfCounterClockwise == 35) {
+            LeapMotionController.numberOfCounterClockwise = 0;
+
+            if (MapsController.isInStreetView()) {
+              MapsController.moveStreetView(false);
+            } else { 
+              MapsController.zoomMap(false);
+            }
+          }
         }
-      }
+      } 
     }
   },
 
@@ -255,6 +264,23 @@ LeapMotionController = {
   **/
   isOneHand : function (frame) {
     return frame.hands.length == 1;
+  },
+
+  /**
+  * Returns the number of extended fingers detected
+  * 
+  * hand : hand from which the number has to be computed
+  * return : number of fingers extended
+  **/
+  getNumberOfFingers : function (hand) {
+    var extendedFingers = 0;
+    for (var f = 0; f < hand.fingers.length; f++) {
+        var finger = hand.fingers[f];
+        if (finger.extended) {
+          extendedFingers++;
+        }
+    }
+    return extendedFingers
   },
 
   /**
