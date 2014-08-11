@@ -9,29 +9,26 @@ LeapMotionController = {
     enableGestures: true 
   }, // function called each loop 
     function(frame) {
-
-
-    if (frame.valid 
-      && frame.hands.length == 1
-      && frame.pointables.length > 0) {
-
-      var position = frame.pointables[0].stabilizedTipPosition;
-      var normalized = frame.interactionBox.normalizePoint(position, true);
-
-      var x = window.innerWidth * normalized[0];
-      var y = window.innerHeight * (1 - normalized[1]);
-
-
-      // TODO - implement or delete
-    }
-
-
+      // If a hand is detected, call the controller
       LeapMotionController.attachDetachCanvas(frame);
-      LeapMotionController.computeHandPosition(frame);  
-      LeapMotionController.detectAndHandleGestures(frame);
 
+      // Compute the pixel where the hand is pointing on the screen
+      var pixel = LeapMotionController.computeHandPosition(frame);
+      if (pixel) {
+        // Draw the cursor on the screen and 
+        Controller.drawCursor(pixel.x, pixel.y);
+        Controller.computePanningAcceleration(pixel.x, pixel.y);
+      }
+
+      LeapMotionController.detectAndHandleGestures(frame);
   }),
 
+  /**
+  * Calls the main Controller in order to attach or detach
+  * the canvas for drawing the cursor pointer
+  *
+  * frame : current frame
+  **/
   attachDetachCanvas : function (frame) {
     Controller.attachDetachCanvas(LeapMotionController.isOneHand(frame));
   },
@@ -41,6 +38,7 @@ LeapMotionController = {
   * based on window width and height
   *
   * frame : current frame
+  * return : the current pixel (x,y)
   **/
   computeHandPosition : function (frame) {
     if (frame.valid 
@@ -53,84 +51,14 @@ LeapMotionController = {
       var x = window.innerWidth * normalized[0];
       var y = window.innerHeight * (1 - normalized[1]);
 
+      var point = {
+        x : x,
+        y : y
+      }; 
 
-      Controller.drawCursor(x, y);
-      LeapMotionController.computeNewXandY(x, y);
+      return point;
     }
-  },
-
-  /**
-  * This function maps the hand position, given by the arguments
-  * x and y, onto the [-15, 15] domain, which represents offset pixels
-  * from the current position of the center of the map.
-  * After the new position is computed, this function calls 
-  * the google maps controller to pan the map to the new destination
-  *
-  * There is a safe space in the center of the screen,
-  * which is defined by a ratio of 1/3 of the width and height
-  * of the browser. 
-  * If the hand (cursor) is positioned in the safe space, the
-  * map will not pan.
-  *
-  * Based on the offset of the hand position (cursor) from the 
-  * center of the screen, the map is panned with less pixels
-  * or more pixels, simulating acceleration in movement
-  * 
-  * x : x coordinate
-  * y : y coordinate
-  **/
-  computeNewXandY : function(x, y) {
-    var leftSize = window.innerWidth * 0.33;
-    var rightSize = window.innerWidth * 0.66;
-
-    var topSize = window.innerHeight * 0.33;
-    var bottomSize = window.innerHeight * 0.66;
-
-    var newX = 0;
-    var newY = 0;
-
-    if (x > rightSize)
-      newX = LeapMotionController.mapValueToInterval(x, rightSize, window.innerWidth, 0, 15);
-    else if (x < leftSize)
-      newX = LeapMotionController.mapValueToInterval(x, 0, leftSize, -15, 0);
-
-    if (y > bottomSize)
-      newY = LeapMotionController.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 15);
-    else if (y < topSize)
-      newY = LeapMotionController.mapValueToInterval(y, 0, topSize, -15, 0);
-    
-    MapsController.panBy(newX, newY);
-  },
-
-  /**
-  * This is a generic helper linear function that maps a value (x)  
-  * from the given domain [a, b] to the given range [c, d].
-  * f(a) = c and f(b) = d
-  *
-  * Three liniar maps are defined in order to achieve this.
-  *
-  *** f1: This map shifts the initial endpoint of the interval [a, b] to the origin
-  *** f1(x) = x - a, therefore [a, b] --> [0, b-a]
-  *
-  *** f2: This scales the interval [0, b-a] so that the right endpoint becomes d-c
-  *** f2(x) = x * (d - c)/(b - a)
-  *** note: the length of the image interval is the same as the interval [c,d]
-  *
-  *** f3: This shifts [0, d-c] onto [c,d]
-  *** f3(x) = x + c
-  *
-  * Puting it together: f(x) = f3(f2(f1(x)))
-  *
-  * x : the value for which the function should be computed
-  * a : lowest value of the domain [a, b]
-  * b : highest value of the domain [a, b]
-  * c : lowest value of the range [c, d]
-  * d : highest value of the range [c, d]
-  *
-  * return : f(x), where f: [a, b] --> [c, d]
-  **/
-  mapValueToInterval : function (x, a, b, c, d) {
-    return Math.round(((d - c)/(b - a)) * (x - a) + c);
+    return null;
   },
 
   /**
@@ -246,8 +174,10 @@ LeapMotionController = {
   **/
   handleScreenTap : function(frame) {
     if(LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
-      console.log("Screen Tap Gesture");
-      MapsController.switchMapMode();
+      var pixel = LeapMotionController.computeHandPosition(frame);
+      if (pixel) {
+        MapsController.switchMapMode(pixel.x, pixel.y);
+      }
     }
   },
 
@@ -289,7 +219,7 @@ LeapMotionController = {
   * frame : current frame
   **/
   isOneHand : function (frame) {
-    return frame.hands.length == 1;
+    return frame.valid && frame.hands.length == 1;
   },
 
   /**

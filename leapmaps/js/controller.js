@@ -67,31 +67,6 @@ Controller = {
 			case 104: // H button
 							Controller.addOrRemoveHelpWindow();
 							break;
-			case 93: // ] button -- TODO: delete this
-							var evtDown = document.createEvent("MouseEvents");
-							evtDown.initMouseEvent("mousedown", true,true, window, 
-								0, posx,100,posx,100,false,false,false,false,0,null);
-							$("#map-canvas")[0].dispatchEvent(evtDown);
-
-							window.interv = setInterval(function() {
-								var evt = document.createEvent("MouseEvents");
-								evt.initMouseEvent("mousemove", true, true, "window", 
-									0, posx,100,posx,100,false,false,false,false,0,null);
-								posx+=10;
-								evt.webkitMovementX=10;
-								console.log(evt);
-								$("#map-canvas")[0].dispatchEvent(evt);
-								if (posx>1000) {
-									var evtUp = document.createEvent("MouseEvents");
-									evtUp.initMouseEvent("mouseup", true,true, window, 
-										0, posx,100,posx,100,false,false,false,false,0,null);
-									$("#map-canvas")[0].dispatchEvent(evtUp);
-
-									posx=100;
-									clearInterval(interv);
-								}
-							}, 16);
-							break;
 		}		
 	},
 
@@ -149,13 +124,89 @@ Controller = {
 			y = $(window).height() - Controller.cursorSize;
 
 		var canvas = document.getElementById('cursor-canvas');
-		var context = canvas.getContext('2d');
+		if (canvas) {
+			var context = canvas.getContext('2d');
 
-		context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+			context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-		context.beginPath();
-		context.rect(x, y, Controller.cursorSize, Controller.cursorSize);
-		context.fill();
-	}
+			context.beginPath();
+			context.rect(x, y, Controller.cursorSize, Controller.cursorSize);
+			context.fill();
+		}
+	},
+
+ 	/**
+  * This function maps the hand position, given by the arguments
+  * x and y, onto the [-15, 15] domain, which represents offset pixels
+  * from the current position of the center of the map.
+  * After the new position is computed, this function calls 
+  * the google maps controller to pan the map to the new destination
+  *
+  * There is a safe space in the center of the screen,
+  * which is defined by a ratio of 1/3 of the width and height
+  * of the browser. 
+  * If the hand (cursor) is positioned in the safe space, the
+  * map will not pan.
+  *
+  * Based on the offset of the hand position (cursor) from the 
+  * center of the screen, the map is panned with less pixels
+  * or more pixels, simulating acceleration in movement
+  * 
+  * x : x coordinate
+  * y : y coordinate
+  **/
+  computePanningAcceleration : function(x, y) {
+    var leftSize = window.innerWidth * 0.33;
+    var rightSize = window.innerWidth * 0.66;
+
+    var topSize = window.innerHeight * 0.33;
+    var bottomSize = window.innerHeight * 0.66;
+
+    var newX = 0;
+    var newY = 0;
+
+    if (x > rightSize)
+      newX = Controller.mapValueToInterval(x, rightSize, window.innerWidth, 0, 15);
+    else if (x < leftSize)
+      newX = Controller.mapValueToInterval(x, 0, leftSize, -15, 0);
+
+    if (y > bottomSize)
+      newY = Controller.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 15);
+    else if (y < topSize)
+      newY = Controller.mapValueToInterval(y, 0, topSize, -15, 0);
+    
+    MapsController.panBy(newX, newY);
+  },
+
+  /**
+  * This is a generic helper linear function that maps a value (x)  
+  * from the given domain [a, b] to the given range [c, d].
+  * f(a) = c and f(b) = d
+  *
+  * Three liniar maps are defined in order to achieve this.
+  *
+  *** f1: This map shifts the initial endpoint of the interval [a, b] to the origin
+  *** f1(x) = x - a, therefore [a, b] --> [0, b-a]
+  *
+  *** f2: This scales the interval [0, b-a] so that the right endpoint becomes d-c
+  *** f2(x) = x * (d - c)/(b - a)
+  *** note: the length of the image interval is the same as the interval [c,d]
+  *
+  *** f3: This shifts [0, d-c] onto [c,d]
+  *** f3(x) = x + c
+  *
+  * Puting it together: f(x) = f3(f2(f1(x)))
+  *
+  * x : the value for which the function should be computed
+  * a : lowest value of the domain [a, b]
+  * b : highest value of the domain [a, b]
+  * c : lowest value of the range [c, d]
+  * d : highest value of the range [c, d]
+  *
+  * return : f(x), where f: [a, b] --> [c, d]
+  **/
+  mapValueToInterval : function (x, a, b, c, d) {
+    return Math.round(((d - c)/(b - a)) * (x - a) + c);
+  }
 
 }

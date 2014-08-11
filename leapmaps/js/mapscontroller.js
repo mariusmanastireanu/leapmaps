@@ -178,16 +178,41 @@ MapsController = {
 
 	/**
 	* It switches the map mode between Google Maps and Street View
+	*
+	* x : the x position on the screen
+	* y : the y position on the screen
 	**/
-	switchMapMode : function () {
+	switchMapMode : function (x, y) {
 		
 		if(!MapsController.isInStreetView()) {
-			var lat = MapsController.map.getCenter().lat();
-			var lng = MapsController.map.getCenter().lng();
+			// retrieve the lat lng for the far extremities of the (visible) map
+      var latLngBounds = MapsController.map.getBounds();
+      var neBound = latLngBounds.getNorthEast();
+      var swBound = latLngBounds.getSouthWest();
+
+      // convert the bounds in points
+      var neBoundInPx = MapsController.map.getProjection().fromLatLngToPoint(neBound);
+      var swBoundInPx = MapsController.map.getProjection().fromLatLngToPoint(swBound);
+
+      // compute the percentage of x and y coordinates 
+      // related to the div containing the map
+      var procX = x/window.innerWidth;
+      var procY = y/window.innerHeight;
+
+      // compute new coordinates in google points for lat and lng;
+		  // for lng : subtract from the right edge of the container the left edge, 
+		  // multiply it by the percentage where the x coordinate was on the screen
+		  // related to the container in which the map is placed and add back the left boundary
+		  // same for lat
+      var newLngInPx = (neBoundInPx.x - swBoundInPx.x) * procX + swBoundInPx.x;
+      var newLatInPx = (swBoundInPx.y - neBoundInPx.y) * procY + neBoundInPx.y;
+
+      // convert the google.maps.Point in LatLng
+      var newLatLng = MapsController.map.getProjection().fromPointToLatLng(new google.maps.Point(newLngInPx, newLatInPx));
 
 			// Check if Google has a StreetView image within 'radius' meters of the given location, and load that panorama
 			var sv = new google.maps.StreetViewService();
-			sv.getPanoramaByLocation(new google.maps.LatLng(lat, lng), 'MapsController.streetViewRenderingRadius', function(data, status) {
+			sv.getPanoramaByLocation(newLatLng, 'MapsController.streetViewRenderingRadius', function(data, status) {
 				if (status == 'OK') {
 					var panoramaOptions = {
 						pano: data.location.pano,
@@ -196,7 +221,7 @@ MapsController = {
 					MapsController.map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
 					MapsController.map.getStreetView().setZoom(0);
 				} else {
-					console.log('There is no street view panorama available for a radius of ' + MapsController.radius + ' meters at this coordinates: lat: ' + lat + ', lng: ' + lng);
+					alert('There is no street view panorama available for a radius of ' + MapsController.radius + ' meters at this coordinates: lat: ' + newLatLng.lat + ', lng: ' + newLatLng.lng);
 					console.log('Should display an warning message to the view');
 				}
 			});
@@ -204,5 +229,13 @@ MapsController = {
 			// Disable Street View, switch to Google Maps
 			MapsController.map.getStreetView().setVisible(false);
 		}
+	},
+
+	fromPointToLatLng : function (point, z) {
+		var scale = Math.pow(2, z);
+		var normalizedPoint = new google.maps.Point(point.x / scale, point.y / scale);
+		var latLng = MapsController.map.getProjection().fromPointToLatLng(normalizedPoint);
+		console.log('latlng: ' + latLng);
+		return latLng;
 	}
 }
