@@ -7,8 +7,10 @@ Controller = {
 	currentHelpView : null,
 
 	initialize : function() {
+  	Controller.helpViews = ['h1.html', 'h2.html'];
+
 		// Register keypress event handler
-    $(document).on("keypress", function(e) {
+    $(document).keyup(function(e) {
       Controller.handleKeypress(e);
     });
 
@@ -21,12 +23,7 @@ Controller = {
 		    MapsController.initialize();
 
 		    if (Controller.helpWindow) {
-		    	Controller.helpViews = ['h1.html', 
-		    				'h2.html'];
-			 		$(function(){
-			      $("#help").load("views/help/" + Controller.helpViews[0]);
-			      Controller.currentHelpView = Controller.helpViews[0];
-			    });
+		    	Controller.loadHelpView(0);
 	    	}
 	    	
 		});
@@ -75,8 +72,15 @@ Controller = {
 	**/
 	handleKeypress : function (e) {
 		
-		switch(e.which) {
-			case 104: // H button
+		switch(e.keyCode) {
+			case 27 : // ESC key
+							if(Controller.helpWindow) {
+								Controller.addOrRemoveHelpWindow();
+							} else if (MapsController.isInStreetView()) {
+								MapsController.switchMapMode(0,0);
+							}
+							break;
+			case 72: // H key
 							Controller.addOrRemoveHelpWindow();
 							break;
 		}		
@@ -91,6 +95,8 @@ Controller = {
 			var helpwnd = document.createElement("div");
 			helpwnd.setAttribute("id", "help");
 			document.getElementById("wrapper").appendChild(helpwnd);
+
+			Controller.loadHelpView(0);
 		} else {
 			Controller.helpWindow = false;
 			document.getElementById("help").remove();
@@ -221,16 +227,16 @@ Controller = {
 				var nextView = null;
 				for (var i = 0; i < Controller.helpViews.length; i++) {
 					if (Controller.currentHelpView == Controller.helpViews[i]) {
-						nextView = i+1;
+						if (swipeDirection == "fromRightToLeft")
+							nextView = i+1;
+						else 
+							nextView = i-1;
 						break;
 					}
 				}
-console.log("can show, and should show " + nextView);
-				if (nextView < Controller.helpViews.length) {
-			 		$(function(){
-			      $("#help").load("views/help/" + Controller.helpViews[nextView]);
-			      Controller.currentHelpView = Controller.helpViews[nextView];
-			    });
+
+				if (nextView >= 0 && nextView < Controller.helpViews.length) {
+					Controller.loadHelpView(nextView);
 				} else {
 					Controller.addOrRemoveHelpWindow();
 				}
@@ -245,6 +251,13 @@ console.log("can show, and should show " + nextView);
 	    	MapsController.rotate360(swipeDirection);
 	  	} 
 		}
+  },
+
+  loadHelpView : function(viewNumber) {
+ 		$(function() {
+      $("#help").load("views/help/" + Controller.helpViews[viewNumber]);
+      Controller.currentHelpView = Controller.helpViews[viewNumber];
+    });
   },
 
   /**
