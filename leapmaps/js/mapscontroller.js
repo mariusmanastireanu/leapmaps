@@ -212,7 +212,7 @@ MapsController = {
 
 			// Check if Google has a StreetView image within 'radius' meters of the given location, and load that panorama
 			var sv = new google.maps.StreetViewService();
-			sv.getPanoramaByLocation(newLatLng, 'MapsController.streetViewRenderingRadius', function(data, status) {
+			sv.getPanoramaByLocation(newLatLng, MapsController.streetViewRenderingRadius, function(data, status) {
 				if (status == 'OK') {
 					var panoramaOptions = {
 						pano: data.location.pano,
@@ -221,7 +221,7 @@ MapsController = {
 					MapsController.map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
 					MapsController.map.getStreetView().setZoom(0);
 				} else {
-					alert('There is no street view panorama available for a radius of ' + MapsController.radius + ' meters at this coordinates: lat: ' + newLatLng.lat + ', lng: ' + newLatLng.lng);
+					alert('There is no street view panorama available for a radius of ' + MapsController.streetViewRenderingRadius + ' meters at this coordinates: lat: ' + newLatLng.lat() + ', lng: ' + newLatLng.lng());
 					console.log('Should display an warning message to the view');
 				}
 			});

@@ -245,7 +245,7 @@ Controller = {
 
 			// This fixes the multiple swipes detected at once 
 			Controller.canShowNextWindow = false;
-			Controller.sleep(500, Controller.releaseLock);
+			Controller.sleep(250, Controller.releaseLock);
 		} else {
 			if (MapsController.isInStreetView()) {
 	    	MapsController.rotate360(swipeDirection);
@@ -277,7 +277,7 @@ Controller = {
 	**/
 	sleep : function(millis, callback) {
     setTimeout(function() { 
-    	callback(); 
+    	callback();
     }, millis);
 	}
 
