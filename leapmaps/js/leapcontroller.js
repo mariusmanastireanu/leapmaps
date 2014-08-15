@@ -9,7 +9,7 @@ LeapMotionController = {
     enableGestures: true 
   }, // function called each loop 
     function(frame) {
-    //  if(Controller.helpWindow === "false") {
+      if(!Controller.helpWindow) {
         // If a hand is detected, call the controller
         LeapMotionController.attachDetachCanvas(frame);
 
@@ -18,11 +18,9 @@ LeapMotionController = {
         if (pixel) {
           // Draw the cursor on the screen and 
           Controller.drawCursor(pixel.x, pixel.y);
-          if(LeapMotionController.isHandSpread(frame)) {
-            Controller.computePanningAcceleration(pixel.x, pixel.y);
-          }
+          Controller.computePanningAcceleration(pixel.x, pixel.y);
         }
-   //   }
+      }
 
       LeapMotionController.detectAndHandleGestures(frame);
   }),
@@ -191,44 +189,28 @@ LeapMotionController = {
   * gesture : the gesture
   **/
   handleSwipe : function(gesture) {
-    //Classify swipe as either horizontal or vertical
-    var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+    if (gesture.state == "stop") {
+      //Classify swipe as either horizontal or vertical
+      var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
 
-    if (isHorizontal) {
-        // Horizontal swipe
-        if(gesture.direction[0] > 0) {
-            swipeDirection = "fromLeftToRight";
-        } else {
-            swipeDirection = "fromRightToLeft";
-        }
-    } else { 
-        // Vertical swipe
-        if(gesture.direction[1] > 0){
-            swipeDirection = "fromBottomToTop";
-        } else {
-            swipeDirection = "fromTopToBottom";
-        }                  
-    }
-
-    if (MapsController.isInStreetView()) {
-      MapsController.rotate360(swipeDirection);
-    } else {
-      if (gesture.state === "stop") {
-        console.log(gesture);
-
-        //console.log('before')
-        //Controller.sleep(1000, LeapMotionController.slp);
-        //console.log('aft');
+      if (isHorizontal) {
+          // Horizontal swipe
+          if(gesture.direction[0] > 0) {
+              swipeDirection = "fromLeftToRight";
+          } else {
+              swipeDirection = "fromRightToLeft";
+          }
+      } else { 
+          // Vertical swipe
+          if(gesture.direction[1] > 0){
+              swipeDirection = "fromBottomToTop";
+          } else {
+              swipeDirection = "fromTopToBottom";
+          }                  
       }
 
-        $(function(){
-       //   $("#help").load("views/t2.html"); 
-         });
+      Controller.handleSwipe(swipeDirection);
     }
-  },
-
-  slp : function(x) {
-    return x--;
   },
 
   /**
@@ -238,19 +220,6 @@ LeapMotionController = {
   **/
   isOneHand : function (frame) {
     return frame.valid && frame.hands.length == 1;
-  },
-
-  /**
-  * Returns true if the hand is spread (all the fingers are extended)
-  *
-  * frame : current frame
-  **/
-  isHandSpread : function(frame) {
-    if (LeapMotionController.isOneHand(frame) 
-      &&  LeapMotionController.getNumberOfFingers(frame.hands[0]) == 5) {
-      return true;
-    }
-    return false;
   },
 
   /**

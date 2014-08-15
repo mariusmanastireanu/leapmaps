@@ -1,12 +1,10 @@
 Controller = {
 
 	cursorSize : 5, //px
-
-	text1 : 'asd',
-
-	text2 : '<b>aaa</b> aaaxx',
-
-	helpWindow : false,
+	helpWindow : true,
+	canShowNextWindow : true,
+	helpViews : [],
+	currentHelpView : null,
 
 	initialize : function() {
 		// Register keypress event handler
@@ -22,16 +20,15 @@ Controller = {
 		    
 		    MapsController.initialize();
 
-		    if (document.getElementById("help")) {
-		    	var	texts = [Controller.text1, Controller.text2];
-		    	helpWindow = true;
-		    //	var win = document.getElementById("help");
-		    //	win.innerHTML  = win.innerHTML  + "t1.html";
-
-  $(function(){
-      $("#help").load("views/t1.html"); 
-    });
-		    }
+		    if (Controller.helpWindow) {
+		    	Controller.helpViews = ['h1.html', 
+		    				'h2.html'];
+			 		$(function(){
+			      $("#help").load("views/help/" + Controller.helpViews[0]);
+			      Controller.currentHelpView = Controller.helpViews[0];
+			    });
+	    	}
+	    	
 		});
 
 		// Add resize listener event
@@ -89,27 +86,15 @@ Controller = {
 	* Adds the help window or removes it if previously added
 	**/
 	addOrRemoveHelpWindow : function() {
-		if (!helpWindow) {
-			helpWindow = true;
+		if (!Controller.helpWindow) {
+			Controller.helpWindow = true;
 			var helpwnd = document.createElement("div");
 			helpwnd.setAttribute("id", "help");
 			document.getElementById("wrapper").appendChild(helpwnd);
 		} else {
-			helpWindow = false;
+			Controller.helpWindow = false;
 			document.getElementById("help").remove();
 		}
-	},
-
-	/**
-	* Sleep function
-	* 
-	* millis : time in milliseconds to sleep
-	* callback : callback function
-	**/
-	sleep : function(millis, callback) {
-    setTimeout(function() { 
-    	callback(); 
-    }, millis);
 	},
 
 	/**
@@ -222,6 +207,65 @@ Controller = {
   **/
   mapValueToInterval : function (x, a, b, c, d) {
     return Math.round(((d - c)/(b - a)) * (x - a) + c);
-  }
+  },
+
+  /**
+  * Handles a swipe action detected by the Leap Motion
+  * 
+  * swipeDirection : the swipe direction
+  **/
+  handleSwipe : function(swipeDirection) {
+		if (Controller.helpWindow) {
+			if (Controller.canShowNextWindow)  {
+
+				var nextView = null;
+				for (var i = 0; i < Controller.helpViews.length; i++) {
+					if (Controller.currentHelpView == Controller.helpViews[i]) {
+						nextView = i+1;
+						break;
+					}
+				}
+console.log("can show, and should show " + nextView);
+				if (nextView < Controller.helpViews.length) {
+			 		$(function(){
+			      $("#help").load("views/help/" + Controller.helpViews[nextView]);
+			      Controller.currentHelpView = Controller.helpViews[nextView];
+			    });
+				} else {
+					Controller.addOrRemoveHelpWindow();
+				}
+
+			}
+
+			// This fixes the multiple swipes detected at once 
+			Controller.canShowNextWindow = false;
+			Controller.sleep(500, Controller.releaseLock);
+		} else {
+			if (MapsController.isInStreetView()) {
+	    	MapsController.rotate360(swipeDirection);
+	  	} 
+		}
+  },
+
+  /**
+  * Call this function to release the lock related to 
+  * the help window. 
+  **/
+  releaseLock : function() {
+  	Controller.canShowNextWindow = true;
+  },
+
+
+	/**
+	* Sleep function with a callback
+	* 
+	* millis : time in milliseconds to sleep
+	* callback : callback function
+	**/
+	sleep : function(millis, callback) {
+    setTimeout(function() { 
+    	callback(); 
+    }, millis);
+	}
 
 }
