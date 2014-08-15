@@ -18,7 +18,9 @@ LeapMotionController = {
         if (pixel) {
           // Draw the cursor on the screen and 
           Controller.drawCursor(pixel.x, pixel.y);
-          Controller.computePanningAcceleration(pixel.x, pixel.y);
+          if (LeapMotionController.getNumberOfFingers(frame.hands[0]) == 5) {
+            Controller.computePanningAcceleration(pixel.x, pixel.y);
+          }
         }
       }
 
