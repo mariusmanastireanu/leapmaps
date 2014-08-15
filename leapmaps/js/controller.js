@@ -1,6 +1,10 @@
 Controller = {
 
-	cursorSize : 5,
+	cursorSize : 5, //px
+
+	text1 : 'asd',
+
+	text2 : '<b>aaa</b> aaaxx',
 
 	helpWindow : false,
 
@@ -17,6 +21,17 @@ Controller = {
 		    $("#map-canvas").height(bodyheight);
 		    
 		    MapsController.initialize();
+
+		    if (document.getElementById("help")) {
+		    	var	texts = [Controller.text1, Controller.text2];
+		    	helpWindow = true;
+		    //	var win = document.getElementById("help");
+		    //	win.innerHTML  = win.innerHTML  + "t1.html";
+
+  $(function(){
+      $("#help").load("views/t1.html"); 
+    });
+		    }
 		});
 
 		// Add resize listener event

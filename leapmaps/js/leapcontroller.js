@@ -9,16 +9,20 @@ LeapMotionController = {
     enableGestures: true 
   }, // function called each loop 
     function(frame) {
-      // If a hand is detected, call the controller
-      LeapMotionController.attachDetachCanvas(frame);
+    //  if(Controller.helpWindow === "false") {
+        // If a hand is detected, call the controller
+        LeapMotionController.attachDetachCanvas(frame);
 
-      // Compute the pixel where the hand is pointing on the screen
-      var pixel = LeapMotionController.computeHandPosition(frame);
-      if (pixel) {
-        // Draw the cursor on the screen and 
-        Controller.drawCursor(pixel.x, pixel.y);
-        Controller.computePanningAcceleration(pixel.x, pixel.y);
-      }
+        // Compute the pixel where the hand is pointing on the screen
+        var pixel = LeapMotionController.computeHandPosition(frame);
+        if (pixel) {
+          // Draw the cursor on the screen and 
+          Controller.drawCursor(pixel.x, pixel.y);
+          if(LeapMotionController.isHandSpread(frame)) {
+            Controller.computePanningAcceleration(pixel.x, pixel.y);
+          }
+        }
+   //   }
 
       LeapMotionController.detectAndHandleGestures(frame);
   }),
@@ -187,8 +191,6 @@ LeapMotionController = {
   * gesture : the gesture
   **/
   handleSwipe : function(gesture) {
-    switchMode = 0;
-
     //Classify swipe as either horizontal or vertical
     var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
 
@@ -208,9 +210,25 @@ LeapMotionController = {
         }                  
     }
 
-    if (MapsController.isInStreetView) {
+    if (MapsController.isInStreetView()) {
       MapsController.rotate360(swipeDirection);
+    } else {
+      if (gesture.state === "stop") {
+        console.log(gesture);
+
+        //console.log('before')
+        //Controller.sleep(1000, LeapMotionController.slp);
+        //console.log('aft');
+      }
+
+        $(function(){
+       //   $("#help").load("views/t2.html"); 
+         });
     }
+  },
+
+  slp : function(x) {
+    return x--;
   },
 
   /**
@@ -220,6 +238,19 @@ LeapMotionController = {
   **/
   isOneHand : function (frame) {
     return frame.valid && frame.hands.length == 1;
+  },
+
+  /**
+  * Returns true if the hand is spread (all the fingers are extended)
+  *
+  * frame : current frame
+  **/
+  isHandSpread : function(frame) {
+    if (LeapMotionController.isOneHand(frame) 
+      &&  LeapMotionController.getNumberOfFingers(frame.hands[0]) == 5) {
+      return true;
+    }
+    return false;
   },
 
   /**
