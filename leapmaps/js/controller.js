@@ -7,7 +7,7 @@ Controller = {
 	currentHelpView : null,
 
 	initialize : function() {
-  	Controller.helpViews = ['h1.html', 'h2.html', 'h3.html'];
+  	Controller.helpViews = ['h1.html', 'h2.html', 'h3.html', 'h4.html'];
 
 		// Register keypress event handler
     $(document).keyup(function(e) {
