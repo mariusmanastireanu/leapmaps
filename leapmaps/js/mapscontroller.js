@@ -5,7 +5,7 @@ MapsController = {
 	lat : 46.76907446541323,
 	lng : 23.59061690807345,
 
-	pitchHeadingStep : 1.35,
+	pitchHeadingStep : 7.5,
 
 	streetViewRenderingRadius : 150,
 	streetViewAngleThreshold : 40,
@@ -191,7 +191,7 @@ MapsController = {
 			sv.getPanoramaByLocation(newLatLng, MapsController.streetViewRenderingRadius, function(data, status) {
 				if (status == 'OK') {
 					var panoramaOptions = {
-						pano: data.location.pano,
+						pano: data.location.pano
 					};
 									
 					MapsController.map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
