@@ -237,7 +237,7 @@ Controller = {
 
 				if (nextView >= 0 && nextView < Controller.helpViews.length) {
 					Controller.loadHelpView(nextView);
-				} else {
+				} else if (nextView != -1) {
 					Controller.addOrRemoveHelpWindow();
 				}
 
