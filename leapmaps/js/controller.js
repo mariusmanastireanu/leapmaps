@@ -1,7 +1,7 @@
 Controller = {
 
 	cursorSize : 5, //px
-	helpWindow : true,
+	helpWindow : false,
 	canShowNextWindow : true,
 	helpViews : [],
 	currentHelpView : null,
@@ -24,9 +24,7 @@ Controller = {
 		    
 		    MapsController.initialize();
 
-		    if (Controller.helpWindow) {
-		    	Controller.loadHelpView(0);
-	    	}
+		    Controller.addOrRemoveHelpWindow();
 	    	
 		});
 
@@ -105,10 +103,22 @@ Controller = {
 
 			Controller.loadHelpView(0);
 			Controller.attachDetachCanvas(false);
+				
+			// create a canvas in order for the window to act like a modal one
+			if(document.getElementById("modal-canvas") == null) {
+				var modalCanvas = document.createElement("canvas");
+				modalCanvas.height = $(window).height();
+				modalCanvas.width = $(window).width();
+				modalCanvas.setAttribute("id", "modal-canvas");
 
+				var wrp = document.getElementById("wrapper");
+				var mapCnv = document.getElementById("map-canvas");
+				wrp.insertBefore(modalCanvas, mapCnv);
+			}
 		} else {
 			Controller.helpWindow = false;
 			document.getElementById("help").remove();
+			document.getElementById("modal-canvas").remove();
 		}
 	},
 
@@ -290,7 +300,6 @@ Controller = {
 				} else if (nextView != -1) {
 					Controller.addOrRemoveHelpWindow();
 				}
-
 			}
 
 			// This fixes the multiple swipes detected at once 
@@ -335,5 +344,4 @@ Controller = {
     	callback();
     }, millis);
 	}
-
 }
