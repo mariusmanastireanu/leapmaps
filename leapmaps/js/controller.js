@@ -7,7 +7,7 @@ Controller = {
 	currentHelpView : null,
 
 	initialize : function() {
-  	Controller.helpViews = ['h1.html', 'h2.html'];
+  	Controller.helpViews = ['h1.html', 'h2.html', 'h3.html'];
 
 		// Register keypress event handler
     $(document).keyup(function(e) {
@@ -71,7 +71,6 @@ Controller = {
 	* e : the event
 	**/
 	handleKeypress : function (e) {
-		
 		switch(e.keyCode) {
 			case 27 : // ESC key
 							if(Controller.helpWindow) {
@@ -79,6 +78,12 @@ Controller = {
 							} else if (MapsController.isInStreetView()) {
 								MapsController.switchMapMode(0,0);
 							}
+							break;
+			case 37 : // LEFT arrow
+							Controller.handleSwipe("fromLeftToRight");
+							break;
+			case 39 : // RIGHT arrow
+							Controller.handleSwipe("fromRightToLeft");
 							break;
 			case 72: // H key
 							Controller.addOrRemoveHelpWindow();
