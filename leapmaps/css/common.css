@@ -60,23 +60,42 @@ body {
 
 .help-footer {
 	width: 100%;
-	height: 15px;
+	height: 45px;
 	position: absolute;
 	bottom: 0;
 	left: 0;
 	padding-bottom: 15px;
+	font-size: 14px;
 }
 
 .help-prev {
 	float: left;
-	padding-left: 20px;	
+	padding-left: 15px;	
 }
 
 .help-next {
 	float: right;
-	padding-right: 20px;	
+	padding-right: 15px;	
 }
 
-.text-disabled {
-	color: rgb(150, 150, 150);
+.help-prev-text {
+	position: relative;
+	display: inline-block;
+	top: -13px;
+	left: -6px;
+}
+
+.help-next-text {
+	position: relative;
+	display: inline-block;
+	top: -13px;
+	left: 3px;
+}
+
+.disabled {
+	opacity: 0.45;
+}
+
+#img-small {
+	width: 45px;
 }

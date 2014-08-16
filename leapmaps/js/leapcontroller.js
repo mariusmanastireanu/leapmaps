@@ -177,6 +177,7 @@ LeapMotionController = {
   * frame : current frame
   **/
   handleScreenTap : function(frame) {
+    console.log('screen tap');
     if(LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
       var pixel = LeapMotionController.computeHandPosition(frame);
       if (pixel) {
