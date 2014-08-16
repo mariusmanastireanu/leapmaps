@@ -183,32 +183,8 @@ MapsController = {
 	* y : the y position on the screen
 	**/
 	switchMapMode : function (x, y) {
-		
 		if(!MapsController.isInStreetView()) {
-			// retrieve the lat lng for the far extremities of the (visible) map
-      var latLngBounds = MapsController.map.getBounds();
-      var neBound = latLngBounds.getNorthEast();
-      var swBound = latLngBounds.getSouthWest();
-
-      // convert the bounds in points
-      var neBoundInPx = MapsController.map.getProjection().fromLatLngToPoint(neBound);
-      var swBoundInPx = MapsController.map.getProjection().fromLatLngToPoint(swBound);
-
-      // compute the percentage of x and y coordinates 
-      // related to the div containing the map
-      var procX = x/window.innerWidth;
-      var procY = y/window.innerHeight;
-
-      // compute new coordinates in google points for lat and lng;
-		  // for lng : subtract from the right edge of the container the left edge, 
-		  // multiply it by the percentage where the x coordinate was on the screen
-		  // related to the container in which the map is placed and add back the left boundary
-		  // same for lat
-      var newLngInPx = (neBoundInPx.x - swBoundInPx.x) * procX + swBoundInPx.x;
-      var newLatInPx = (swBoundInPx.y - neBoundInPx.y) * procY + neBoundInPx.y;
-
-      // convert the google.maps.Point in LatLng
-      var newLatLng = MapsController.map.getProjection().fromPointToLatLng(new google.maps.Point(newLngInPx, newLatInPx));
+      var newLatLng = MapsController.fromPixelToLatLng(x, y);
 
 			// Check if Google has a StreetView image within 'radius' meters of the given location, and load that panorama
 			var sv = new google.maps.StreetViewService();
@@ -231,11 +207,48 @@ MapsController = {
 		}
 	},
 
+	/**
+	* Converts a Google Point into Google LatLng Object
+	*
+	* point : Google Point
+	* z : Zoom level
+	**/
 	fromPointToLatLng : function (point, z) {
 		var scale = Math.pow(2, z);
 		var normalizedPoint = new google.maps.Point(point.x / scale, point.y / scale);
-		var latLng = MapsController.map.getProjection().fromPointToLatLng(normalizedPoint);
-		console.log('latlng: ' + latLng);
-		return latLng;
+		return latLng = MapsController.map.getProjection().fromPointToLatLng(normalizedPoint);
+	},
+
+	/**
+	* Converts a pixel on the screen into a Google LatLng Object
+	*
+	* x : x coordinate on the screen
+	* y : y coordinate on the screen
+	**/
+	fromPixelToLatLng : function(x, y) {
+		// retrieve the lat lng for the far extremities of the (visible) map
+	  var latLngBounds = MapsController.map.getBounds();
+	  var neBound = latLngBounds.getNorthEast();
+	  var swBound = latLngBounds.getSouthWest();
+
+	  // convert the bounds in points
+	  var neBoundInPx = MapsController.map.getProjection().fromLatLngToPoint(neBound);
+	  var swBoundInPx = MapsController.map.getProjection().fromLatLngToPoint(swBound);
+
+	  // compute the percentage of x and y coordinates 
+	  // related to the div containing the map
+	  var procX = x/window.innerWidth;
+	  var procY = y/window.innerHeight;
+
+	  // compute new coordinates in google points for lat and lng;
+	  // for lng : subtract from the right edge of the container the left edge, 
+	  // multiply it by the percentage where the x coordinate was on the screen
+	  // related to the container in which the map is placed and add back the left boundary
+	  // same for lat
+	  var newLngInPx = (neBoundInPx.x - swBoundInPx.x) * procX + swBoundInPx.x;
+	  var newLatInPx = (swBoundInPx.y - neBoundInPx.y) * procY + neBoundInPx.y;
+
+	  // convert the google.maps.Point in LatLng
+	  return newLatLng = MapsController.map.getProjection().fromPointToLatLng(new google.maps.Point(newLngInPx, newLatInPx));
 	}
 }

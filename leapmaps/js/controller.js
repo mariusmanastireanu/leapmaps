@@ -5,6 +5,8 @@ Controller = {
 	canShowNextWindow : true,
 	helpViews : [],
 	currentHelpView : null,
+	numberOfClockwise : 0,
+	numberOfCounterClockwise : 0,
 
 	initialize : function() {
   	Controller.helpViews = ['h1.html', 'h2.html', 'h3.html', 'h4.html'];
@@ -102,6 +104,8 @@ Controller = {
 			document.getElementById("wrapper").appendChild(helpwnd);
 
 			Controller.loadHelpView(0);
+			Controller.attachDetachCanvas(false);
+
 		} else {
 			Controller.helpWindow = false;
 			document.getElementById("help").remove();
@@ -129,20 +133,22 @@ Controller = {
 	* y : y coordinate
 	**/
 	drawCursor : function(x, y) {
-		if (x > $(window).width() - Controller.cursorSize)
-			x = $(window).width() - Controller.cursorSize;
-		if (y > $(window).height() - Controller.cursorSize)
-			y = $(window).height() - Controller.cursorSize;
+		if (!Controller.helpWindow) {
+			if (x > $(window).width() - Controller.cursorSize)
+				x = $(window).width() - Controller.cursorSize;
+			if (y > $(window).height() - Controller.cursorSize)
+				y = $(window).height() - Controller.cursorSize;
 
-		var canvas = document.getElementById('cursor-canvas');
-		if (canvas) {
-			var context = canvas.getContext('2d');
+			var canvas = document.getElementById('cursor-canvas');
+			if (canvas) {
+				var context = canvas.getContext('2d');
 
-			context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+				context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-			context.beginPath();
-			context.rect(x, y, Controller.cursorSize, Controller.cursorSize);
-			context.fill();
+				context.beginPath();
+				context.rect(x, y, Controller.cursorSize, Controller.cursorSize);
+				context.fill();
+			}
 		}
 	},
 
@@ -167,26 +173,28 @@ Controller = {
   * y : y coordinate
   **/
   computePanningAcceleration : function(x, y) {
-    var leftSize = window.innerWidth * 0.33;
-    var rightSize = window.innerWidth * 0.66;
+  	if(!Controller.helpWindow && !MapsController.isInStreetView()) {
+	    var leftSize = window.innerWidth * 0.33;
+	    var rightSize = window.innerWidth * 0.66;
 
-    var topSize = window.innerHeight * 0.33;
-    var bottomSize = window.innerHeight * 0.66;
+	    var topSize = window.innerHeight * 0.33;
+	    var bottomSize = window.innerHeight * 0.66;
 
-    var newX = 0;
-    var newY = 0;
+	    var newX = 0;
+	    var newY = 0;
 
-    if (x > rightSize)
-      newX = Controller.mapValueToInterval(x, rightSize, window.innerWidth, 0, 15);
-    else if (x < leftSize)
-      newX = Controller.mapValueToInterval(x, 0, leftSize, -15, 0);
+	    if (x > rightSize)
+	      newX = Controller.mapValueToInterval(x, rightSize, window.innerWidth, 0, 15);
+	    else if (x < leftSize)
+	      newX = Controller.mapValueToInterval(x, 0, leftSize, -15, 0);
 
-    if (y > bottomSize)
-      newY = Controller.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 15);
-    else if (y < topSize)
-      newY = Controller.mapValueToInterval(y, 0, topSize, -15, 0);
-    
-    MapsController.panBy(newX, newY);
+	    if (y > bottomSize)
+	      newY = Controller.mapValueToInterval(y, bottomSize, window.innerHeight, 0, 15);
+	    else if (y < topSize)
+	      newY = Controller.mapValueToInterval(y, 0, topSize, -15, 0);
+	    
+	    MapsController.panBy(newX, newY);
+  	}
   },
 
   /**
@@ -219,6 +227,43 @@ Controller = {
   mapValueToInterval : function (x, a, b, c, d) {
     return Math.round(((d - c)/(b - a)) * (x - a) + c);
   },
+
+  /**
+  * Handles a circle gesture
+  * 
+  * Depending on the current state it can:
+  * zoom in/out the Map 
+  * move the current position in street view
+  **/
+  handleCircle : function (clockwise) {
+		if(!Controller.helpWindow) {
+			if (clockwise) {
+		    Controller.numberOfClockwise++;
+
+		    if (Controller.numberOfClockwise == 35) {
+		      Controller.numberOfClockwise = 0;
+
+		      if (MapsController.isInStreetView()) {
+		        MapsController.moveStreetView(true);
+		      } else { 
+		        MapsController.zoomMap(true);
+		      }
+		    }
+		  } else {
+		    Controller.numberOfCounterClockwise++;
+
+		    if (Controller.numberOfCounterClockwise == 35) {
+		      Controller.numberOfCounterClockwise = 0;
+
+		      if (MapsController.isInStreetView()) {
+		        MapsController.moveStreetView(false);
+		      } else { 
+		        MapsController.zoomMap(false);
+		      }
+		    }
+	  	}
+		}
+	},
 
   /**
   * Handles a swipe action detected by the Leap Motion
@@ -256,6 +301,12 @@ Controller = {
 	    	MapsController.rotate360(swipeDirection);
 	  	} 
 		}
+  },
+
+  handleScreenTap : function(pixel) {
+    if (!Controller.helpWindow) {
+    	MapsController.switchMapMode(pixel.x, pixel.y);
+  	}
   },
 
   loadHelpView : function(viewNumber) {

@@ -1,8 +1,6 @@
 LeapMotionController = {
 
   switchMode : 0,
-  numberOfClockwise : 0,
-  numberOfCounterClockwise : 0,
 
   controller : Leap.loop({
     // options
@@ -103,7 +101,7 @@ LeapMotionController = {
   handleCircle : function (frame, gesture) {
     if (LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1
       /*&& gesture.state === "stop"*/) {
-      // execute actions only if one finger is poining
+      // execute actions only if ONE finger is poining
       // solves bug while moving in maps view
 
       var clockwise = false;
@@ -121,31 +119,7 @@ LeapMotionController = {
           clockwise = true;
         }
 
-        if (clockwise) {
-          LeapMotionController.numberOfClockwise++;
-
-          if (LeapMotionController.numberOfClockwise == 35) {
-            LeapMotionController.numberOfClockwise = 0;
-
-            if (MapsController.isInStreetView()) {
-              MapsController.moveStreetView(true);
-            } else { 
-              MapsController.zoomMap(true);
-            }
-          }
-        } else {
-          LeapMotionController.numberOfCounterClockwise++;
-
-          if (LeapMotionController.numberOfCounterClockwise == 35) {
-            LeapMotionController.numberOfCounterClockwise = 0;
-
-            if (MapsController.isInStreetView()) {
-              MapsController.moveStreetView(false);
-            } else { 
-              MapsController.zoomMap(false);
-            }
-          }
-        }
+        Controller.handleCircle(clockwise);
       } 
     }
   },
@@ -181,7 +155,7 @@ LeapMotionController = {
     if(LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
       var pixel = LeapMotionController.computeHandPosition(frame);
       if (pixel) {
-        MapsController.switchMapMode(pixel.x, pixel.y);
+        Controller.handleScreenTap(pixel);
       }
     }
   },
