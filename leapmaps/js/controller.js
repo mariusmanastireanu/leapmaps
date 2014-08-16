@@ -324,7 +324,6 @@ Controller = {
   	Controller.canShowNextWindow = true;
   },
 
-
 	/**
 	* Sleep function with a callback
 	* 

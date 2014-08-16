@@ -197,8 +197,12 @@ MapsController = {
 					MapsController.map.setStreetView(new google.maps.StreetViewPanorama(document.getElementById("map-canvas"), panoramaOptions));
 					MapsController.map.getStreetView().setZoom(0);
 				} else {
-					alert('There is no street view panorama available for a radius of ' + MapsController.streetViewRenderingRadius + ' meters at this coordinates: lat: ' + newLatLng.lat() + ', lng: ' + newLatLng.lng());
-					console.log('Should display an warning message to the view');
+					alert('There is no street view panorama available for a radius of ' 
+						+ MapsController.streetViewRenderingRadius 
+						+ ' meters at this coordinates: ' 
+						+ 'lat: ' + newLatLng.lat() 
+						+ ', lng: ' + newLatLng.lng() 
+						+ '\n\nPlease try again');
 				}
 			});
 		} else {
