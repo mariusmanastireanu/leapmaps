@@ -14,6 +14,8 @@ MapsController = {
 	zoomStep : 1,
 	panoramaZoomStep : 0.2,
 
+	markers : [],
+
 	/**
 	* It initializes the Google Map
 	**/
@@ -174,6 +176,20 @@ MapsController = {
 				}
 			}
 		}
+	},
+
+	/**
+	* Should add or remove a marker from the map.
+	*
+	* x : the x position on the screen
+	* y : the y position on the screen
+	**/
+	addRemoveMarker : function(x, y) {
+		var marker = new google.maps.Marker({
+      position: MapsController.fromPixelToLatLng(x, y),
+      map: MapsController.map
+  	});
+  	MapsController.markers.push(marker);
 	},
 
 	/**

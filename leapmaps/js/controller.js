@@ -70,7 +70,7 @@ Controller = {
 	*
 	* e : the event
 	**/
-	handleKeypress : function (e) {
+	handleKeypress : function (e) {;
 		switch(e.keyCode) {
 			case 27 : // ESC key
 							if(Controller.helpWindow) {
@@ -310,6 +310,12 @@ Controller = {
 	    	MapsController.rotate360(swipeDirection);
 	  	} 
 		}
+  },
+
+  handleKeyTap : function(pixel) {
+  	if(!Controller.helpWindow && !MapsController.isInStreetView()) {
+  		MapsController.addRemoveMarker(pixel.x, pixel.y);
+  	}
   },
 
   handleScreenTap : function(pixel) {

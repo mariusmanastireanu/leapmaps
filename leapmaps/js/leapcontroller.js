@@ -78,8 +78,7 @@ LeapMotionController = {
               LeapMotionController.handleCircle(frame, gesture);
               break;
           case "keyTap":
-              // TODO : uncomment this
-              // handleKeyTap(frame, gesture);
+              // LeapMotionController.handleKeyTap(frame, gesture);
               break;
           case "screenTap":
               LeapMotionController.handleScreenTap(frame);
@@ -131,18 +130,14 @@ LeapMotionController = {
   * gesture : the gesture
   **/
   handleKeyTap : function(frame, gesture) {
-    var handIds = gesture.handIds;
-    handIds.forEach(function(handId) {
-      var hand = frame.hand(handId);
-      
-        switchMode++;
-    
-        if (switchMode == 3) {
-          alert('switch');
-          switchMapMode();
-          switchMode = 0;
-        }
-    });
+    if (LeapMotionController.isOneHand(frame)
+      && LeapMotionController.getNumberOfFingers(frame.hands[0]) == 1) {
+      var pixel = LeapMotionController.computeHandPosition(frame);
+      if (pixel) {
+        Controller.handleKeyTap(pixel);
+      }
+    }
+
   },
 
   /**
