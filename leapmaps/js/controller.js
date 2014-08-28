@@ -2,6 +2,7 @@ Controller = {
 
 	cursorSize : 5, //px
 	helpWindow : false,
+	showHelpWindowOnStart : true,
 	canShowNextWindow : true,
 	helpViews : [],
 	currentHelpView : null,
@@ -24,7 +25,9 @@ Controller = {
 		    
 		    MapsController.initialize();
 
-		    Controller.addOrRemoveHelpWindow();
+		    if (Controller.showHelpWindowOnStart) {
+		    	Controller.addOrRemoveHelpWindow();
+		  	}
 	    	
 		});
 
@@ -117,8 +120,10 @@ Controller = {
 			}
 		} else {
 			Controller.helpWindow = false;
-			document.getElementById("help").remove();
-			document.getElementById("modal-canvas").remove();
+			if (document.getElementById("help"))
+				document.getElementById("help").remove();
+			if (document.getElementById("modal-canvas"))
+				document.getElementById("modal-canvas").remove();
 		}
 	},
 
