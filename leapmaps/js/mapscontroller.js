@@ -152,11 +152,8 @@ MapsController = {
 				} 
 			}
 
-			console.log('my heading: ' + heading);
-
 			for(var i = 0; i < MapsController.map.getStreetView().getLinks().length; i++) {
 				var thisHeading = MapsController.map.getStreetView().getLinks()[i].heading;
-				console.log('avl.heading: ' + thisHeading);
 				if (heading > thisHeading - MapsController.streetViewAngleThreshold && 
 						heading < thisHeading + MapsController.streetViewAngleThreshold) {
 					MapsController.map.getStreetView()

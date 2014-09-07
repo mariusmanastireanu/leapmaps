@@ -1,7 +1,5 @@
 LeapMotionController = {
 
-  switchMode : 0,
-
   controller : Leap.loop({
     // options
     enableGestures: true 
