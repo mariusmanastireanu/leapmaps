@@ -48,8 +48,8 @@ LeapMotionController = {
       var position = frame.pointables[0].stabilizedTipPosition;
       var normalized = frame.interactionBox.normalizePoint(position, true);
 
-      var x = window.innerWidth * normalized[0];
-      var y = window.innerHeight * (1 - normalized[1]);
+      var x = $("#map-canvas").width() * normalized[0];
+      var y = $("#map-canvas").height() * (1 - normalized[1]);
 
       var point = {
         x : x,

@@ -243,6 +243,7 @@ MapsController = {
 	* y : y coordinate on the screen
 	**/
 	fromPixelToLatLng : function(x, y) {
+		console.log(x + "..." + y);
 		// retrieve the lat lng for the far extremities of the (visible) map
 	  var latLngBounds = MapsController.map.getBounds();
 	  var neBound = latLngBounds.getNorthEast();
@@ -254,8 +255,8 @@ MapsController = {
 
 	  // compute the percentage of x and y coordinates 
 	  // related to the div containing the map
-	  var procX = x/window.innerWidth;
-	  var procY = y/window.innerHeight;
+	  var procX = x/$("#map-canvas").width();
+	  var procY = y/$("#map-canvas").height();
 
 	  // compute new coordinates in google points for lat and lng;
 	  // for lng : subtract from the right edge of the container the left edge, 

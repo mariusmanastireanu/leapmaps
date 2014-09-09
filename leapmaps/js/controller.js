@@ -50,8 +50,8 @@ Controller = {
 			if(document.getElementById("cursor-canvas") == null) {
 				// create canvas document
 				var cursorCnv = document.createElement("canvas");
-				cursorCnv.height = $(window).height();
-				cursorCnv.width = $(window).width();
+				cursorCnv.height = $("#map-canvas").height();
+				cursorCnv.width = $("#map-canvas").width();
 				cursorCnv.setAttribute("id", "cursor-canvas");
 
 				var wrp = document.getElementById("wrapper");
@@ -69,29 +69,43 @@ Controller = {
 	},
 
 	/**
-	* Handles keypress events from the keyboard
-	*
-	* e : the event
+	* Computes the size of the canvas based on the screen size
 	**/
-	handleKeypress : function (e) {;
-		switch(e.keyCode) {
-			case 27 : // ESC key
-							if(Controller.helpWindow) {
-								Controller.addOrRemoveHelpWindow();
-							} else if (MapsController.isInStreetView()) {
-								MapsController.switchMapMode(0,0);
-							}
-							break;
-			case 37 : // LEFT arrow
-							Controller.handleSwipe("fromLeftToRight");
-							break;
-			case 39 : // RIGHT arrow
-							Controller.handleSwipe("fromRightToLeft");
-							break;
-			case 72: // H key
-							Controller.addOrRemoveHelpWindow();
-							break;
-		}		
+	computeCanvasSize : function() {
+		if(document.getElementById("cursor-canvas")) {
+	    var bodyheight = $("#map-canvas").height();
+			var bodywidth = $("#map-canvas").width();
+				
+			var canvas = document.getElementsByTagName('canvas')[0];
+			canvas.width  = bodywidth;
+			canvas.height = bodyheight;
+		}
+	},
+
+	/**
+	* Draws a cursor on the screen based on the given position
+	* 
+	* x : x coordinate
+	* y : y coordinate
+	**/
+	drawCursor : function(x, y) {
+		if (!Controller.helpWindow) {
+			if (x > $("#map-canvas").width() - Controller.cursorSize)
+				x = $("#map-canvas").width() - Controller.cursorSize;
+			if (y > $("#map-canvas").height() - Controller.cursorSize)
+				y = $("#map-canvas").height() - Controller.cursorSize;
+
+			var canvas = document.getElementById('cursor-canvas');
+			if (canvas) {
+				var context = canvas.getContext('2d');
+
+				context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+				context.beginPath();
+				context.rect(x, y, Controller.cursorSize, Controller.cursorSize);
+				context.fill();
+			}
+		}
 	},
 
 	/**
@@ -110,8 +124,8 @@ Controller = {
 			// create a canvas in order for the window to act like a modal one
 			if(document.getElementById("modal-canvas") == null) {
 				var modalCanvas = document.createElement("canvas");
-				modalCanvas.height = $(window).height();
-				modalCanvas.width = $(window).width();
+				modalCanvas.height = $("#map-canvas").height();
+				modalCanvas.width = $("#map-canvas").width();
 				modalCanvas.setAttribute("id", "modal-canvas");
 
 				var wrp = document.getElementById("wrapper");
@@ -124,46 +138,6 @@ Controller = {
 				document.getElementById("help").remove();
 			if (document.getElementById("modal-canvas"))
 				document.getElementById("modal-canvas").remove();
-		}
-	},
-
-	/**
-	* Computes the size of the canvas based on the screen size
-	**/
-	computeCanvasSize : function() {
-		if(document.getElementById("cursor-canvas")) {
-	    var bodyheight = $(window).height();
-			var bodywidth = $(window).width();
-				
-			var canvas = document.getElementsByTagName('canvas')[0];
-			canvas.width  = bodywidth;
-			canvas.height = bodyheight;
-		}
-	},
-
-	/**
-	* Draws a cursor on the screen based on the given position
-	* 
-	* x : x coordinate
-	* y : y coordinate
-	**/
-	drawCursor : function(x, y) {
-		if (!Controller.helpWindow) {
-			if (x > $(window).width() - Controller.cursorSize)
-				x = $(window).width() - Controller.cursorSize;
-			if (y > $(window).height() - Controller.cursorSize)
-				y = $(window).height() - Controller.cursorSize;
-
-			var canvas = document.getElementById('cursor-canvas');
-			if (canvas) {
-				var context = canvas.getContext('2d');
-
-				context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-
-				context.beginPath();
-				context.rect(x, y, Controller.cursorSize, Controller.cursorSize);
-				context.fill();
-			}
 		}
 	},
 
@@ -244,6 +218,32 @@ Controller = {
   },
 
   /**
+	* Handles keypress events from the keyboard
+	*
+	* e : the event
+	**/
+	handleKeypress : function (e) {;
+		switch(e.keyCode) {
+			case 27 : // ESC key
+							if(Controller.helpWindow) {
+								Controller.addOrRemoveHelpWindow();
+							} else if (MapsController.isInStreetView()) {
+								MapsController.switchMapMode(0,0);
+							}
+							break;
+			case 37 : // LEFT arrow
+							Controller.handleSwipe("fromLeftToRight");
+							break;
+			case 39 : // RIGHT arrow
+							Controller.handleSwipe("fromRightToLeft");
+							break;
+			case 72: // H key
+							Controller.addOrRemoveHelpWindow();
+							break;
+		}		
+	},
+
+  /**
   * Handles a circle gesture
   * 
   * Depending on the current state it can:
@@ -317,18 +317,33 @@ Controller = {
 		}
   },
 
+  /**
+  * Handes a key tap gesture detected by the Leap Motion controller
+  *
+  * pixel : the screen pixel where the gesture occured
+  **/
   handleKeyTap : function(pixel) {
   	if(!Controller.helpWindow && !MapsController.isInStreetView()) {
   		MapsController.addRemoveMarker(pixel.x, pixel.y);
   	}
   },
 
+  /**
+  * Handes a screen tap gesture detected by the Leap Motion controller
+  *
+  * pixel : the screen pixel where the gesture occured
+  **/
   handleScreenTap : function(pixel) {
     if (!Controller.helpWindow) {
     	MapsController.switchMapMode(pixel.x, pixel.y);
   	}
   },
 
+  /**
+  * Helper function used to load a help html view into the help popup window
+  *
+  * viewNumber : the index number of the view that has to be loaded
+  **/
   loadHelpView : function(viewNumber) {
  		$(function() {
       $("#help").load("views/help/" + Controller.helpViews[viewNumber]);
