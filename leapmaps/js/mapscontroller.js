@@ -243,7 +243,6 @@ MapsController = {
 	* y : y coordinate on the screen
 	**/
 	fromPixelToLatLng : function(x, y) {
-		console.log(x + "..." + y);
 		// retrieve the lat lng for the far extremities of the (visible) map
 	  var latLngBounds = MapsController.map.getBounds();
 	  var neBound = latLngBounds.getNorthEast();

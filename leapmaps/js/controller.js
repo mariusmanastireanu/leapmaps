@@ -141,6 +141,20 @@ Controller = {
 		}
 	},
 
+	/**
+	* This function is just for demonstration purpose
+	* It should add or remove a log window in the UI
+	**/
+	addOrRmoveLogWindow : function() {
+		if(document.getElementById("log-window") == null) {
+			var logWindow = document.createElement("div");
+			logWindow.setAttribute("id", "log-window");
+			document.getElementById("wrapper").appendChild(logWindow);
+		} else {
+			document.getElementById("log-window").remove();
+		}
+	},
+
  	/**
   * This function maps the hand position, given by the arguments
   * x and y, onto the [-15, 15] domain, which represents offset pixels
@@ -222,7 +236,7 @@ Controller = {
 	*
 	* e : the event
 	**/
-	handleKeypress : function (e) {;
+	handleKeypress : function (e) {
 		switch(e.keyCode) {
 			case 27 : // ESC key
 							if(Controller.helpWindow) {
@@ -239,6 +253,9 @@ Controller = {
 							break;
 			case 72: // H key
 							Controller.addOrRemoveHelpWindow();
+							break;
+			case 76: // L key
+							Controller.addOrRmoveLogWindow();
 							break;
 		}		
 	},

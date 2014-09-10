@@ -32,6 +32,22 @@ body {
 	font-family: "Verdana";
 }
 
+#log-window {
+	position: absolute;
+	color: white;
+	width: 300px;
+	max-width: 300px;
+	word-break: normal;
+	height: 100%;
+	margin-left: 0;
+	margin-top: 0;
+	top: 0;
+	z-index: 100;
+	background: rgba(34, 29, 60, 0.85);
+	font-family: "Verdana";
+	padding: 8px 8px 0px 8px;
+}
+
 #cursor-canvas, #modal-canvas {
 	position: absolute;
 	z-index: 9999;

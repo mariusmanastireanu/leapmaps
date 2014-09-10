@@ -21,7 +21,83 @@ LeapMotionController = {
       }
 
       LeapMotionController.detectAndHandleGestures(frame);
+      LeapMotionController.logData(frame);
   }),
+
+  /**
+  * This function is only for presentation purpose
+  * It will log the data from leap motion into the UI
+  *
+  * frame : current frame
+  **/
+  logData : function (frame) {
+    if(document.getElementById("log-window")) {
+      var frameString = "";
+      frameString = "<b>Real time data: <br><hr>";
+
+      frameString += "Google Maps: <br></b>";
+      var map = MapsController.map;
+      var center = map.getCenter();
+      frameString += LeapMotionController.concatData("lat", center.lat());
+      frameString += LeapMotionController.concatData("lng", center.lng());
+      if (!MapsController.isInStreetView()) {
+        frameString += LeapMotionController.concatData("Zoom", map.getZoom());
+      } else {
+        var streetView = map.getStreetView();
+        var pov = streetView.getPov();
+        frameString += LeapMotionController.concatData("Heading", pov.heading);
+        frameString += LeapMotionController.concatData("Pitch", pov.pitch);
+
+        if (streetView.getLinks()) {
+          for(var i = 0; i < streetView.getLinks().length; i++) {
+            frameString += LeapMotionController.concatData("Available heading " + i, streetView.getLinks()[i].heading);
+          }
+        }
+      }
+
+      frameString += "<hr><b>Leap Motion: <br></b>";
+      frameString += LeapMotionController.concatData("frame_id", frame.id);
+      frameString += LeapMotionController.concatData("Number of hands", frame.hands.length);
+      frameString += LeapMotionController.concatData("Number of fingers", LeapMotionController.getNumberOfFingers(frame.hands[0]) + LeapMotionController.getNumberOfFingers(frame.hands[1]));
+            
+      for(var i = 0; i < frame.hands.length; i++) {
+        var hand = frame.hands[i];
+
+        frameString += "<br>";
+        frameString += LeapMotionController.concatData("Hand type", hand.type);
+        frameString += LeapMotionController.concatData("Hand confidence", hand.confidence);
+        frameString += LeapMotionController.concatData("Hand position x", hand.palmPosition[0] + " mm");
+        frameString += LeapMotionController.concatData("Hand position y", hand.palmPosition[1] + " mm");
+        frameString += LeapMotionController.concatData("Hand position z", hand.palmPosition[2] + " mm");
+      }
+
+      frameString += "<br>";
+      frameString += "Gestures:<br>";
+
+      if (frame.gestures.length > 0) {
+        for(var g = 0; g < frame.gestures.length; g++) {
+          var gesture = frame.gestures[g];
+
+          frameString += LeapMotionController.concatData("Gesture name", gesture.type);
+          frameString += LeapMotionController.concatData("Gesture state", gesture.state);
+          frameString += LeapMotionController.concatData("Gesture duration", gesture.duration + " microseconds");
+          frameString += "<br>";
+        }
+      }
+
+
+
+      var output = document.getElementById("log-window");
+      output.innerHTML = frameString;
+    }
+  },
+
+  /**
+  * This function is only for presentation purpose
+  **/
+  concatData : function(id, data) {
+    return id + ": " + data + "<br>";
+  },
 
   /**
   * Calls the main Controller in order to attach or detach
