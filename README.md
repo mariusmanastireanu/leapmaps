@@ -14,17 +14,7 @@
 * Install Leap Motion v2 beta from: https://developer.leapmotion.com/
 * Run the application from index.html
 
-* [TODO] Summary of set up
-* [TODO] Configuration
-* [TODO] Dependencies
-* [TODO] Database configuration
-* [TODO] How to run tests
-* [TODO] Deployment instructions
-
 ### Contribution guidelines ###
-
-* [TODO] Writing tests
-* [TODO] Code review
 
 * All the code related to the **Leap Motion Controller** events (such as frame, gesture, hands, fingers and other related events) should be placed in the correct controller. 
 Leap Motion controller can be found here: *"js/leapmotioncontroller.js"*
